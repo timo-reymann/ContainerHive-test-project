@@ -16,7 +16,7 @@ variables:
 
 .build:
   image:
-    name: ghcr.io/timo-reymann/containerhive:1628fdc
+    name: ghcr.io/timo-reymann/containerhive:e8f3643
     entrypoint: ["/bin/sh"]
   services:
     - name: moby/buildkit:latest
@@ -31,14 +31,14 @@ variables:
 
 .manifest:
   image:
-    name: ghcr.io/timo-reymann/containerhive:1628fdc
+    name: ghcr.io/timo-reymann/containerhive:e8f3643
     entrypoint: ["/bin/sh"]
   script:
     - ch finalize ${IMAGE_NAME} --build-id "$SNAPSHOT_ID"
 
 .test:
   image:
-    name: ghcr.io/timo-reymann/containerhive:1628fdc
+    name: ghcr.io/timo-reymann/containerhive:e8f3643
     entrypoint: ["/bin/sh"]
   stage: test
   services:
@@ -54,7 +54,7 @@ variables:
 # === GENERATE ===
 generate:
   image:
-    name: ghcr.io/timo-reymann/containerhive:1628fdc
+    name: ghcr.io/timo-reymann/containerhive:e8f3643
     entrypoint: ["/bin/sh"]
   stage: generate
   script:
