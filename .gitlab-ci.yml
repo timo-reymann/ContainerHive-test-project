@@ -1,2 +1,11 @@
 include:
   - local: /gitlab/pipeline.gitlab-ci.yml
+
+.build:
+  before_script: cd gitlab
+
+.manifest:
+  before_script: cd gitlab
+
+generate:
+  before_script: cd gitlab
