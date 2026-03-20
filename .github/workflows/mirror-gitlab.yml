@@ -16,6 +16,6 @@ jobs:
       - name: Mirror to GitLab
         run: |
           git remote add gitlab https://pat:${{ secrets.GITLAB_TOKEN }}@gitlab.com/timo-reymann/mirror-containerhive-test-project.git
-          git push --mirror gitlab
+          git push --mirror gitlab --prune "refs/remotes/origin/*:refs/heads/*"
         env:
           GITLAB_TOKEN: ${{ secrets.GITLAB_TOKEN }}
