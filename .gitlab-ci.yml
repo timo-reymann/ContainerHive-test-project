@@ -4,3 +4,7 @@ include:
 .build-arm64:
   tags:
     - saas-linux-small-arm64
+
+.build-amd64:
+  tags:
+    - saas-linux-small-amd64
