@@ -1,2 +1,6 @@
 include:
   - local: /gitlab/pipeline.gitlab-ci.yml
+
+.build-arm64:
+  tags:
+    - saas-linux-small-arm64
