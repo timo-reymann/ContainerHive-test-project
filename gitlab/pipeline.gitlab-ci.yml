@@ -16,7 +16,7 @@ variables:
 
 .build:
   image:
-    name: ghcr.io/timo-reymann/containerhive:3e7a7e4
+    name: ghcr.io/timo-reymann/containerhive:8202234
     entrypoint: [""]
   services:
     - name: moby/buildkit:latest
@@ -29,16 +29,22 @@ variables:
     - ch -p gitlab build ${IMAGE_NAME} --platform ${PLATFORM} --build-id "$SNAPSHOT_ID"
     - ch -p gitlab sbom ${IMAGE_NAME} --platform ${PLATFORM} --build-id "$SNAPSHOT_ID"
 
+.build-amd64:
+  extends: .build
+
+.build-arm64:
+  extends: .build
+
 .manifest:
   image:
-    name: ghcr.io/timo-reymann/containerhive:3e7a7e4
+    name: ghcr.io/timo-reymann/containerhive:8202234
     entrypoint: [""]
   script:
     - ch -p gitlab finalize ${IMAGE_NAME} --build-id "$SNAPSHOT_ID"
 
 .test:
   image:
-    name: ghcr.io/timo-reymann/containerhive:3e7a7e4
+    name: ghcr.io/timo-reymann/containerhive:8202234
     entrypoint: [""]
   stage: test
   services:
@@ -54,7 +60,7 @@ variables:
 # === GENERATE ===
 generate:
   image:
-    name: ghcr.io/timo-reymann/containerhive:3e7a7e4
+    name: ghcr.io/timo-reymann/containerhive:8202234
     entrypoint: [""]
   stage: generate
   script:
@@ -66,6 +72,24 @@ generate:
 
 # === BASE-CI ===
 
+build-base-ci-amd64:
+  extends: .build-amd64
+  stage: build-base-ci
+  variables:
+    IMAGE_NAME: base-ci
+    PLATFORM: amd64
+  needs:
+    - generate
+
+build-base-ci-arm64:
+  extends: .build-arm64
+  stage: build-base-ci
+  variables:
+    IMAGE_NAME: base-ci
+    PLATFORM: arm64
+  needs:
+    - generate
+
 
 manifest-base-ci:
   extends: .manifest
@@ -74,6 +98,8 @@ manifest-base-ci:
     IMAGE_NAME: base-ci
   needs:
     - generate
+    - build-base-ci-amd64
+    - build-base-ci-arm64
 
 test-base-ci:
   extends: .test
@@ -84,6 +110,24 @@ test-base-ci:
     - manifest-base-ci
 # === BASE-DEPLOYMENT ===
 
+build-base-deployment-amd64:
+  extends: .build-amd64
+  stage: build-base-deployment
+  variables:
+    IMAGE_NAME: base-deployment
+    PLATFORM: amd64
+  needs:
+    - generate
+
+build-base-deployment-arm64:
+  extends: .build-arm64
+  stage: build-base-deployment
+  variables:
+    IMAGE_NAME: base-deployment
+    PLATFORM: arm64
+  needs:
+    - generate
+
 
 manifest-base-deployment:
   extends: .manifest
@@ -92,6 +136,8 @@ manifest-base-deployment:
     IMAGE_NAME: base-deployment
   needs:
     - generate
+    - build-base-deployment-amd64
+    - build-base-deployment-arm64
 
 test-base-deployment:
   extends: .test
