@@ -15,7 +15,9 @@ variables:
 # === BASE TEMPLATES ===
 
 .build:
-  image: ghcr.io/timo-reymann/containerhive:1112fa9
+  image:
+    name: ghcr.io/timo-reymann/containerhive:1628fdc
+    entrypoint: ["/bin/sh"]
   services:
     - name: moby/buildkit:latest
       alias: buildkitd
@@ -28,12 +30,16 @@ variables:
     - ch sbom ${IMAGE_NAME} --platform ${PLATFORM} --build-id "$SNAPSHOT_ID"
 
 .manifest:
-  image: ghcr.io/timo-reymann/containerhive:1112fa9
+  image:
+    name: ghcr.io/timo-reymann/containerhive:1628fdc
+    entrypoint: ["/bin/sh"]
   script:
     - ch finalize ${IMAGE_NAME} --build-id "$SNAPSHOT_ID"
 
 .test:
-  image: ghcr.io/timo-reymann/containerhive:1112fa9
+  image:
+    name: ghcr.io/timo-reymann/containerhive:1628fdc
+    entrypoint: ["/bin/sh"]
   stage: test
   services:
     - name: docker:dind
@@ -47,7 +53,9 @@ variables:
 
 # === GENERATE ===
 generate:
-  image: ghcr.io/timo-reymann/containerhive:1112fa9
+  image:
+    name: ghcr.io/timo-reymann/containerhive:1628fdc
+    entrypoint: ["/bin/sh"]
   stage: generate
   script:
     - ch generate --build-id "$SNAPSHOT_ID"
