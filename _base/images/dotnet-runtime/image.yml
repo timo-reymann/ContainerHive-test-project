@@ -1,0 +1,10 @@
+tags:
+  - name: "8.0"
+    versions:
+      dotnet-sdk-channel: 8.0
+  - name: "9.0"
+    versions:
+      dotnet-sdk-channel: 9.0
+
+platforms:
+  - linux/amd64
