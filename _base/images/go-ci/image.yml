@@ -7,7 +7,7 @@ tags:
       golang: 1.25.6
 
 versions:
-  zig: 0.15.2
+  zig: 0.13.0
 
 platforms:
   - linux/amd64
