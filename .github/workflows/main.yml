@@ -14,7 +14,7 @@ permissions:
 
 env:
   SNAPSHOT_ID: "${{ github.event.pull_request.number }}"
-  CH_IMAGE: ghcr.io/timo-reymann/containerhive:b327375
+  CH_IMAGE: ghcr.io/timo-reymann/containerhive:96e0e34
 
 jobs:
   # === GENERATE ===
@@ -197,6 +197,7 @@ jobs:
     runs-on: ubuntu-24.04
     needs:
       - generate
+      - manifest-base-deployment
     steps:
       - uses: actions/checkout@v6
         with:
@@ -255,6 +256,7 @@ jobs:
     runs-on: ubuntu-24.04
     needs:
       - generate
+      - manifest-base-ci
     steps:
       - uses: actions/checkout@v6
         with:

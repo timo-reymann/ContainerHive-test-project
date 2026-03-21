@@ -23,7 +23,7 @@ before_script:
 
 .build:
   image:
-    name: ghcr.io/timo-reymann/containerhive:b327375
+    name: ghcr.io/timo-reymann/containerhive:96e0e34
     entrypoint: [""]
   services:
     - name: moby/buildkit:latest
@@ -44,14 +44,14 @@ before_script:
 
 .manifest:
   image:
-    name: ghcr.io/timo-reymann/containerhive:b327375
+    name: ghcr.io/timo-reymann/containerhive:96e0e34
     entrypoint: [""]
   script:
     - ch -p gitlab finalize ${IMAGE_NAME} --build-id "$SNAPSHOT_ID"
 
 .test:
   image:
-    name: ghcr.io/timo-reymann/containerhive:b327375
+    name: ghcr.io/timo-reymann/containerhive:96e0e34
     entrypoint: [""]
   stage: test
   services:
@@ -67,7 +67,7 @@ before_script:
 # === GENERATE ===
 generate:
   image:
-    name: ghcr.io/timo-reymann/containerhive:b327375
+    name: ghcr.io/timo-reymann/containerhive:96e0e34
     entrypoint: [""]
   stage: generate
   script:
@@ -163,6 +163,7 @@ build-dotnet-runtime-amd64:
     PLATFORM: amd64
   needs:
     - generate
+    - manifest-base-deployment
 
 
 manifest-dotnet-runtime:
@@ -191,6 +192,7 @@ build-go-ci-amd64:
     PLATFORM: amd64
   needs:
     - generate
+    - manifest-base-ci
 
 
 manifest-go-ci:
