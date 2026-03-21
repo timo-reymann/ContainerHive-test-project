@@ -36,7 +36,7 @@ jobs:
   # === BASE-CI ===
 
   build-base-ci-amd64:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     needs:
       - generate
     steps:
@@ -56,7 +56,7 @@ jobs:
       - run: docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e CI=1 -e HOME="$RUNNER_TEMP/ch" -v "$RUNNER_TEMP/ch:$RUNNER_TEMP/ch" -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" --network ch-net -e BUILDKIT_HOST=tcp://buildkitd:8372 $CH_IMAGE ch -p github sbom base-ci --platform amd64 --build-id "$SNAPSHOT_ID"
 
   build-base-ci-arm64:
-    runs-on: ubuntu-latest-arm64
+    runs-on: ubuntu-24.04-arm
     needs:
       - generate
     steps:
@@ -114,7 +114,7 @@ jobs:
   # === BASE-DEPLOYMENT ===
 
   build-base-deployment-amd64:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     needs:
       - generate
     steps:
@@ -134,7 +134,7 @@ jobs:
       - run: docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e CI=1 -e HOME="$RUNNER_TEMP/ch" -v "$RUNNER_TEMP/ch:$RUNNER_TEMP/ch" -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" --network ch-net -e BUILDKIT_HOST=tcp://buildkitd:8372 $CH_IMAGE ch -p github sbom base-deployment --platform amd64 --build-id "$SNAPSHOT_ID"
 
   build-base-deployment-arm64:
-    runs-on: ubuntu-latest-arm64
+    runs-on: ubuntu-24.04-arm
     needs:
       - generate
     steps:
