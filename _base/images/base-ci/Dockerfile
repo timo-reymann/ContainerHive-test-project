@@ -5,4 +5,7 @@ RUN apt-get update \
         ca-certificates \
         curl \
         git \
+        tar \
+        gzip \
+        xz-utils \
     && rm -rf /var/lib/apt/lists/*

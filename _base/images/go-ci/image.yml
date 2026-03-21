@@ -1,0 +1,13 @@
+tags:
+  - name: "1.26.0"
+    versions:
+      golang: 1.26.1
+  - name: "1.25.0"
+    versions:
+      golang: 1.25.6
+
+versions:
+  zig: 0.15.2
+
+platforms:
+  - linux/amd64

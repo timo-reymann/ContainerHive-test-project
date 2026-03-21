@@ -7,6 +7,10 @@ stages:
   - manifest-base-ci
   - build-base-deployment
   - manifest-base-deployment
+  - build-dotnet-runtime
+  - manifest-dotnet-runtime
+  - build-go-ci
+  - manifest-go-ci
   - test
 
 variables:
@@ -19,7 +23,7 @@ before_script:
 
 .build:
   image:
-    name: ghcr.io/timo-reymann/containerhive:c5834ed
+    name: ghcr.io/timo-reymann/containerhive:74ee3ba
     entrypoint: [""]
   services:
     - name: moby/buildkit:latest
@@ -40,14 +44,14 @@ before_script:
 
 .manifest:
   image:
-    name: ghcr.io/timo-reymann/containerhive:c5834ed
+    name: ghcr.io/timo-reymann/containerhive:74ee3ba
     entrypoint: [""]
   script:
     - ch -p gitlab finalize ${IMAGE_NAME} --build-id "$SNAPSHOT_ID"
 
 .test:
   image:
-    name: ghcr.io/timo-reymann/containerhive:c5834ed
+    name: ghcr.io/timo-reymann/containerhive:74ee3ba
     entrypoint: [""]
   stage: test
   services:
@@ -63,7 +67,7 @@ before_script:
 # === GENERATE ===
 generate:
   image:
-    name: ghcr.io/timo-reymann/containerhive:c5834ed
+    name: ghcr.io/timo-reymann/containerhive:74ee3ba
     entrypoint: [""]
   stage: generate
   script:
@@ -149,3 +153,59 @@ test-base-deployment:
   needs:
     - generate
     - manifest-base-deployment
+# === DOTNET-RUNTIME ===
+
+build-dotnet-runtime-amd64:
+  extends: .build-amd64
+  stage: build-dotnet-runtime
+  variables:
+    IMAGE_NAME: dotnet-runtime
+    PLATFORM: amd64
+  needs:
+    - generate
+
+
+manifest-dotnet-runtime:
+  extends: .manifest
+  stage: manifest-dotnet-runtime
+  variables:
+    IMAGE_NAME: dotnet-runtime
+  needs:
+    - generate
+    - build-dotnet-runtime-amd64
+
+test-dotnet-runtime:
+  extends: .test
+  variables:
+    IMAGE_NAME: dotnet-runtime
+  needs:
+    - generate
+    - manifest-dotnet-runtime
+# === GO-CI ===
+
+build-go-ci-amd64:
+  extends: .build-amd64
+  stage: build-go-ci
+  variables:
+    IMAGE_NAME: go-ci
+    PLATFORM: amd64
+  needs:
+    - generate
+
+
+manifest-go-ci:
+  extends: .manifest
+  stage: manifest-go-ci
+  variables:
+    IMAGE_NAME: go-ci
+  needs:
+    - generate
+    - build-go-ci-amd64
+
+test-go-ci:
+  extends: .test
+  variables:
+    IMAGE_NAME: go-ci
+  needs:
+    - generate
+    - manifest-go-ci
