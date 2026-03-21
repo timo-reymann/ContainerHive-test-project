@@ -14,6 +14,7 @@ RUN apt-get update -y \
         libssl3 \
         libstdc++6 \
         zlib1g \
+        curl \
     && rm -rf /var/lib/apt/lists/*
 COPY --from=installer /usr/bin/install-dotnet /usr/bin/install-dotnet
 ARG DOTNET_SDK_CHANNEL_VERSION
