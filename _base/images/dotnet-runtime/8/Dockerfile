@@ -1,4 +1,5 @@
 FROM quay.io/curl/curl AS installer
+USER 0
 RUN curl -L https://dot.net/v1/dotnet-install.sh -o /usr/bin/install-dotnet \
     && chmod +x /usr/bin/install-dotnet
 
