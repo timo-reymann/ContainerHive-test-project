@@ -17,7 +17,7 @@ RUN apt-get update -y \
     && rm -rf /var/lib/apt/lists/*
 COPY --from=installer /usr/bin/install-dotnet /usr/bin/install-dotnet
 ARG DOTNET_SDK_CHANNEL_VERSION
-RUN install-dotnet --runtime --channel "${DOTNET_SDK_CHANNEL_VERSION}" --install-dir /usr/share/dotnet \
+RUN install-dotnet --runtime dotnet --channel "${DOTNET_SDK_CHANNEL_VERSION}" --install-dir /usr/share/dotnet \
     && ln -s /usr/share/dotnet/dotnet /usr/local/bin/dotnet
 
 USER 1000
