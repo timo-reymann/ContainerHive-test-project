@@ -2,5 +2,5 @@ schemaVersion: 2.0.0
 commandTests:
   - name: "zig-installed"
     command: "zig"
-    args: ["--version"]
+    args: ["version"]
     exitCode: 0
