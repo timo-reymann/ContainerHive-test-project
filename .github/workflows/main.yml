@@ -106,6 +106,7 @@ jobs:
           name: generated
           path: github/dist/
       - run: mkdir -p "$RUNNER_TEMP/ch"
+      - run: docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
       - run: docker network create ch-net
       - run: docker run -d --name dind --privileged --network ch-net -e DOCKER_TLS_CERTDIR="" docker:dind
       - run: echo "${{ secrets.GITHUB_TOKEN }}" | docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e CI=1 -i -e HOME="$RUNNER_TEMP/ch" -v "$RUNNER_TEMP/ch:$RUNNER_TEMP/ch" -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" --network ch-net -e DOCKER_HOST=tcp://dind:2375 $CH_IMAGE ch -p github login -u "${{ github.actor }}" --password-stdin ghcr.io
@@ -184,6 +185,7 @@ jobs:
           name: generated
           path: github/dist/
       - run: mkdir -p "$RUNNER_TEMP/ch"
+      - run: docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
       - run: docker network create ch-net
       - run: docker run -d --name dind --privileged --network ch-net -e DOCKER_TLS_CERTDIR="" docker:dind
       - run: echo "${{ secrets.GITHUB_TOKEN }}" | docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e CI=1 -i -e HOME="$RUNNER_TEMP/ch" -v "$RUNNER_TEMP/ch:$RUNNER_TEMP/ch" -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" --network ch-net -e DOCKER_HOST=tcp://dind:2375 $CH_IMAGE ch -p github login -u "${{ github.actor }}" --password-stdin ghcr.io
