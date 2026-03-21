@@ -24,8 +24,8 @@ jobs:
       - uses: actions/checkout@v6
         with:
           lfs: true
-      - run: echo "${{ secrets.GITHUB_TOKEN }}" | docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -i -v ch-config:$HOME -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" $CH_IMAGE ch -p github login -u "${{ github.actor }}" --password-stdin ghcr.io
-      - run: docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -v ch-config:$HOME -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" $CH_IMAGE ch -p github generate --build-id "$SNAPSHOT_ID"
+      - run: echo "${{ secrets.GITHUB_TOKEN }}" | docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -i -e HOME=/tmp/ch -v ch-config:/tmp/ch -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" $CH_IMAGE ch -p github login -u "${{ github.actor }}" --password-stdin ghcr.io
+      - run: docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e HOME=/tmp/ch -v ch-config:/tmp/ch -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" $CH_IMAGE ch -p github generate --build-id "$SNAPSHOT_ID"
       - uses: actions/upload-artifact@v4
         with:
           name: generated
@@ -46,10 +46,10 @@ jobs:
         with:
           name: generated
           path: github/dist/
-      - run: echo "${{ secrets.GITHUB_TOKEN }}" | docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -i -v ch-config:$HOME -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" $CH_IMAGE ch -p github login -u "${{ github.actor }}" --password-stdin ghcr.io
-      - run: docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -v ch-config:$HOME -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" -v /var/run/docker.sock:/var/run/docker.sock $CH_IMAGE ch -p github wait --docker-socket
-      - run: docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -v ch-config:$HOME -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" -v /var/run/docker.sock:/var/run/docker.sock $CH_IMAGE ch -p github build base-ci --platform amd64 --build-id "$SNAPSHOT_ID"
-      - run: docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -v ch-config:$HOME -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" -v /var/run/docker.sock:/var/run/docker.sock $CH_IMAGE ch -p github sbom base-ci --platform amd64 --build-id "$SNAPSHOT_ID"
+      - run: echo "${{ secrets.GITHUB_TOKEN }}" | docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -i -e HOME=/tmp/ch -v ch-config:/tmp/ch -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" $CH_IMAGE ch -p github login -u "${{ github.actor }}" --password-stdin ghcr.io
+      - run: docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e HOME=/tmp/ch -v ch-config:/tmp/ch -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" -v /var/run/docker.sock:/var/run/docker.sock $CH_IMAGE ch -p github wait --docker-socket
+      - run: docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e HOME=/tmp/ch -v ch-config:/tmp/ch -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" -v /var/run/docker.sock:/var/run/docker.sock $CH_IMAGE ch -p github build base-ci --platform amd64 --build-id "$SNAPSHOT_ID"
+      - run: docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e HOME=/tmp/ch -v ch-config:/tmp/ch -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" -v /var/run/docker.sock:/var/run/docker.sock $CH_IMAGE ch -p github sbom base-ci --platform amd64 --build-id "$SNAPSHOT_ID"
 
   build-base-ci-arm64:
     runs-on: ubuntu-latest
@@ -63,10 +63,10 @@ jobs:
         with:
           name: generated
           path: github/dist/
-      - run: echo "${{ secrets.GITHUB_TOKEN }}" | docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -i -v ch-config:$HOME -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" $CH_IMAGE ch -p github login -u "${{ github.actor }}" --password-stdin ghcr.io
-      - run: docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -v ch-config:$HOME -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" -v /var/run/docker.sock:/var/run/docker.sock $CH_IMAGE ch -p github wait --docker-socket
-      - run: docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -v ch-config:$HOME -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" -v /var/run/docker.sock:/var/run/docker.sock $CH_IMAGE ch -p github build base-ci --platform arm64 --build-id "$SNAPSHOT_ID"
-      - run: docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -v ch-config:$HOME -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" -v /var/run/docker.sock:/var/run/docker.sock $CH_IMAGE ch -p github sbom base-ci --platform arm64 --build-id "$SNAPSHOT_ID"
+      - run: echo "${{ secrets.GITHUB_TOKEN }}" | docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -i -e HOME=/tmp/ch -v ch-config:/tmp/ch -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" $CH_IMAGE ch -p github login -u "${{ github.actor }}" --password-stdin ghcr.io
+      - run: docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e HOME=/tmp/ch -v ch-config:/tmp/ch -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" -v /var/run/docker.sock:/var/run/docker.sock $CH_IMAGE ch -p github wait --docker-socket
+      - run: docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e HOME=/tmp/ch -v ch-config:/tmp/ch -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" -v /var/run/docker.sock:/var/run/docker.sock $CH_IMAGE ch -p github build base-ci --platform arm64 --build-id "$SNAPSHOT_ID"
+      - run: docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e HOME=/tmp/ch -v ch-config:/tmp/ch -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" -v /var/run/docker.sock:/var/run/docker.sock $CH_IMAGE ch -p github sbom base-ci --platform arm64 --build-id "$SNAPSHOT_ID"
 
 
   manifest-base-ci:
@@ -82,8 +82,8 @@ jobs:
         with:
           name: generated
           path: github/dist/
-      - run: echo "${{ secrets.GITHUB_TOKEN }}" | docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -i -v ch-config:$HOME -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" $CH_IMAGE ch -p github login -u "${{ github.actor }}" --password-stdin ghcr.io
-      - run: docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -v ch-config:$HOME -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" $CH_IMAGE ch -p github finalize base-ci --build-id "$SNAPSHOT_ID"
+      - run: echo "${{ secrets.GITHUB_TOKEN }}" | docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -i -e HOME=/tmp/ch -v ch-config:/tmp/ch -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" $CH_IMAGE ch -p github login -u "${{ github.actor }}" --password-stdin ghcr.io
+      - run: docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e HOME=/tmp/ch -v ch-config:/tmp/ch -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" $CH_IMAGE ch -p github finalize base-ci --build-id "$SNAPSHOT_ID"
 
   test-base-ci:
     runs-on: ubuntu-latest
@@ -97,9 +97,9 @@ jobs:
         with:
           name: generated
           path: github/dist/
-      - run: echo "${{ secrets.GITHUB_TOKEN }}" | docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -i -v ch-config:$HOME -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" $CH_IMAGE ch -p github login -u "${{ github.actor }}" --password-stdin ghcr.io
-      - run: docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -v ch-config:$HOME -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" -v /var/run/docker.sock:/var/run/docker.sock $CH_IMAGE ch -p github wait --docker-socket
-      - run: docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -v ch-config:$HOME -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" -v /var/run/docker.sock:/var/run/docker.sock $CH_IMAGE ch -p github test base-ci --build-id "$SNAPSHOT_ID" --pull
+      - run: echo "${{ secrets.GITHUB_TOKEN }}" | docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -i -e HOME=/tmp/ch -v ch-config:/tmp/ch -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" $CH_IMAGE ch -p github login -u "${{ github.actor }}" --password-stdin ghcr.io
+      - run: docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e HOME=/tmp/ch -v ch-config:/tmp/ch -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" -v /var/run/docker.sock:/var/run/docker.sock $CH_IMAGE ch -p github wait --docker-socket
+      - run: docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e HOME=/tmp/ch -v ch-config:/tmp/ch -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" -v /var/run/docker.sock:/var/run/docker.sock $CH_IMAGE ch -p github test base-ci --build-id "$SNAPSHOT_ID" --pull
   # === BASE-DEPLOYMENT ===
 
   build-base-deployment-amd64:
@@ -114,10 +114,10 @@ jobs:
         with:
           name: generated
           path: github/dist/
-      - run: echo "${{ secrets.GITHUB_TOKEN }}" | docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -i -v ch-config:$HOME -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" $CH_IMAGE ch -p github login -u "${{ github.actor }}" --password-stdin ghcr.io
-      - run: docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -v ch-config:$HOME -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" -v /var/run/docker.sock:/var/run/docker.sock $CH_IMAGE ch -p github wait --docker-socket
-      - run: docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -v ch-config:$HOME -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" -v /var/run/docker.sock:/var/run/docker.sock $CH_IMAGE ch -p github build base-deployment --platform amd64 --build-id "$SNAPSHOT_ID"
-      - run: docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -v ch-config:$HOME -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" -v /var/run/docker.sock:/var/run/docker.sock $CH_IMAGE ch -p github sbom base-deployment --platform amd64 --build-id "$SNAPSHOT_ID"
+      - run: echo "${{ secrets.GITHUB_TOKEN }}" | docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -i -e HOME=/tmp/ch -v ch-config:/tmp/ch -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" $CH_IMAGE ch -p github login -u "${{ github.actor }}" --password-stdin ghcr.io
+      - run: docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e HOME=/tmp/ch -v ch-config:/tmp/ch -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" -v /var/run/docker.sock:/var/run/docker.sock $CH_IMAGE ch -p github wait --docker-socket
+      - run: docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e HOME=/tmp/ch -v ch-config:/tmp/ch -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" -v /var/run/docker.sock:/var/run/docker.sock $CH_IMAGE ch -p github build base-deployment --platform amd64 --build-id "$SNAPSHOT_ID"
+      - run: docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e HOME=/tmp/ch -v ch-config:/tmp/ch -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" -v /var/run/docker.sock:/var/run/docker.sock $CH_IMAGE ch -p github sbom base-deployment --platform amd64 --build-id "$SNAPSHOT_ID"
 
   build-base-deployment-arm64:
     runs-on: ubuntu-latest
@@ -131,10 +131,10 @@ jobs:
         with:
           name: generated
           path: github/dist/
-      - run: echo "${{ secrets.GITHUB_TOKEN }}" | docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -i -v ch-config:$HOME -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" $CH_IMAGE ch -p github login -u "${{ github.actor }}" --password-stdin ghcr.io
-      - run: docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -v ch-config:$HOME -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" -v /var/run/docker.sock:/var/run/docker.sock $CH_IMAGE ch -p github wait --docker-socket
-      - run: docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -v ch-config:$HOME -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" -v /var/run/docker.sock:/var/run/docker.sock $CH_IMAGE ch -p github build base-deployment --platform arm64 --build-id "$SNAPSHOT_ID"
-      - run: docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -v ch-config:$HOME -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" -v /var/run/docker.sock:/var/run/docker.sock $CH_IMAGE ch -p github sbom base-deployment --platform arm64 --build-id "$SNAPSHOT_ID"
+      - run: echo "${{ secrets.GITHUB_TOKEN }}" | docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -i -e HOME=/tmp/ch -v ch-config:/tmp/ch -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" $CH_IMAGE ch -p github login -u "${{ github.actor }}" --password-stdin ghcr.io
+      - run: docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e HOME=/tmp/ch -v ch-config:/tmp/ch -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" -v /var/run/docker.sock:/var/run/docker.sock $CH_IMAGE ch -p github wait --docker-socket
+      - run: docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e HOME=/tmp/ch -v ch-config:/tmp/ch -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" -v /var/run/docker.sock:/var/run/docker.sock $CH_IMAGE ch -p github build base-deployment --platform arm64 --build-id "$SNAPSHOT_ID"
+      - run: docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e HOME=/tmp/ch -v ch-config:/tmp/ch -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" -v /var/run/docker.sock:/var/run/docker.sock $CH_IMAGE ch -p github sbom base-deployment --platform arm64 --build-id "$SNAPSHOT_ID"
 
 
   manifest-base-deployment:
@@ -150,8 +150,8 @@ jobs:
         with:
           name: generated
           path: github/dist/
-      - run: echo "${{ secrets.GITHUB_TOKEN }}" | docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -i -v ch-config:$HOME -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" $CH_IMAGE ch -p github login -u "${{ github.actor }}" --password-stdin ghcr.io
-      - run: docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -v ch-config:$HOME -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" $CH_IMAGE ch -p github finalize base-deployment --build-id "$SNAPSHOT_ID"
+      - run: echo "${{ secrets.GITHUB_TOKEN }}" | docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -i -e HOME=/tmp/ch -v ch-config:/tmp/ch -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" $CH_IMAGE ch -p github login -u "${{ github.actor }}" --password-stdin ghcr.io
+      - run: docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e HOME=/tmp/ch -v ch-config:/tmp/ch -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" $CH_IMAGE ch -p github finalize base-deployment --build-id "$SNAPSHOT_ID"
 
   test-base-deployment:
     runs-on: ubuntu-latest
@@ -165,6 +165,6 @@ jobs:
         with:
           name: generated
           path: github/dist/
-      - run: echo "${{ secrets.GITHUB_TOKEN }}" | docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -i -v ch-config:$HOME -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" $CH_IMAGE ch -p github login -u "${{ github.actor }}" --password-stdin ghcr.io
-      - run: docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -v ch-config:$HOME -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" -v /var/run/docker.sock:/var/run/docker.sock $CH_IMAGE ch -p github wait --docker-socket
-      - run: docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -v ch-config:$HOME -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" -v /var/run/docker.sock:/var/run/docker.sock $CH_IMAGE ch -p github test base-deployment --build-id "$SNAPSHOT_ID" --pull
+      - run: echo "${{ secrets.GITHUB_TOKEN }}" | docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -i -e HOME=/tmp/ch -v ch-config:/tmp/ch -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" $CH_IMAGE ch -p github login -u "${{ github.actor }}" --password-stdin ghcr.io
+      - run: docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e HOME=/tmp/ch -v ch-config:/tmp/ch -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" -v /var/run/docker.sock:/var/run/docker.sock $CH_IMAGE ch -p github wait --docker-socket
+      - run: docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e HOME=/tmp/ch -v ch-config:/tmp/ch -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" -v /var/run/docker.sock:/var/run/docker.sock $CH_IMAGE ch -p github test base-deployment --build-id "$SNAPSHOT_ID" --pull
