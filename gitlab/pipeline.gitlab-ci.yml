@@ -19,7 +19,7 @@ before_script:
 
 .build:
   image:
-    name: ghcr.io/timo-reymann/containerhive:6b62d9a
+    name: ghcr.io/timo-reymann/containerhive:e0fe9f7
     entrypoint: [""]
   services:
     - name: moby/buildkit:latest
@@ -40,14 +40,14 @@ before_script:
 
 .manifest:
   image:
-    name: ghcr.io/timo-reymann/containerhive:6b62d9a
+    name: ghcr.io/timo-reymann/containerhive:e0fe9f7
     entrypoint: [""]
   script:
     - ch -p gitlab finalize ${IMAGE_NAME} --build-id "$SNAPSHOT_ID"
 
 .test:
   image:
-    name: ghcr.io/timo-reymann/containerhive:6b62d9a
+    name: ghcr.io/timo-reymann/containerhive:e0fe9f7
     entrypoint: [""]
   stage: test
   services:
@@ -63,7 +63,7 @@ before_script:
 # === GENERATE ===
 generate:
   image:
-    name: ghcr.io/timo-reymann/containerhive:6b62d9a
+    name: ghcr.io/timo-reymann/containerhive:e0fe9f7
     entrypoint: [""]
   stage: generate
   script:
