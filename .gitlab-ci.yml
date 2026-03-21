@@ -8,6 +8,3 @@ include:
 .build-amd64:
   tags:
     - saas-linux-small-amd64
-
-before_script:
-  - echo "$CI_REGISTRY_PASSWORD" | ch login -u "$CI_REGISTRY_USER" --password-stdin "$CI_REGISTRY"
