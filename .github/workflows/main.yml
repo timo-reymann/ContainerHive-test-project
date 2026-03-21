@@ -48,10 +48,12 @@ jobs:
           name: generated
           path: github/dist/
       - run: mkdir -p "$RUNNER_TEMP/ch"
-      - run: echo "${{ secrets.GITHUB_TOKEN }}" | docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -i -e HOME="$RUNNER_TEMP/ch" -v "$RUNNER_TEMP/ch:$RUNNER_TEMP/ch" -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" $CH_IMAGE ch -p github login -u "${{ github.actor }}" --password-stdin ghcr.io
-      - run: docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e HOME="$RUNNER_TEMP/ch" -v "$RUNNER_TEMP/ch:$RUNNER_TEMP/ch" -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" -v /var/run/docker.sock:/var/run/docker.sock $CH_IMAGE ch -p github wait --docker-socket
-      - run: docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e HOME="$RUNNER_TEMP/ch" -v "$RUNNER_TEMP/ch:$RUNNER_TEMP/ch" -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" -v /var/run/docker.sock:/var/run/docker.sock $CH_IMAGE ch -p github build base-ci --platform amd64 --build-id "$SNAPSHOT_ID"
-      - run: docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e HOME="$RUNNER_TEMP/ch" -v "$RUNNER_TEMP/ch:$RUNNER_TEMP/ch" -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" -v /var/run/docker.sock:/var/run/docker.sock $CH_IMAGE ch -p github sbom base-ci --platform amd64 --build-id "$SNAPSHOT_ID"
+      - run: docker network create ch-net
+      - run: docker run -d --name dind --privileged --network ch-net -e DOCKER_TLS_CERTDIR="" docker:dind
+      - run: echo "${{ secrets.GITHUB_TOKEN }}" | docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -i -e HOME="$RUNNER_TEMP/ch" -v "$RUNNER_TEMP/ch:$RUNNER_TEMP/ch" -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" --network ch-net -e DOCKER_HOST=tcp://dind:2375 $CH_IMAGE ch -p github login -u "${{ github.actor }}" --password-stdin ghcr.io
+      - run: docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e HOME="$RUNNER_TEMP/ch" -v "$RUNNER_TEMP/ch:$RUNNER_TEMP/ch" -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" --network ch-net -e DOCKER_HOST=tcp://dind:2375 $CH_IMAGE ch -p github wait --docker-socket
+      - run: docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e HOME="$RUNNER_TEMP/ch" -v "$RUNNER_TEMP/ch:$RUNNER_TEMP/ch" -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" --network ch-net -e DOCKER_HOST=tcp://dind:2375 $CH_IMAGE ch -p github build base-ci --platform amd64 --build-id "$SNAPSHOT_ID"
+      - run: docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e HOME="$RUNNER_TEMP/ch" -v "$RUNNER_TEMP/ch:$RUNNER_TEMP/ch" -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" --network ch-net -e DOCKER_HOST=tcp://dind:2375 $CH_IMAGE ch -p github sbom base-ci --platform amd64 --build-id "$SNAPSHOT_ID"
 
   build-base-ci-arm64:
     runs-on: ubuntu-latest
@@ -66,10 +68,12 @@ jobs:
           name: generated
           path: github/dist/
       - run: mkdir -p "$RUNNER_TEMP/ch"
-      - run: echo "${{ secrets.GITHUB_TOKEN }}" | docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -i -e HOME="$RUNNER_TEMP/ch" -v "$RUNNER_TEMP/ch:$RUNNER_TEMP/ch" -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" $CH_IMAGE ch -p github login -u "${{ github.actor }}" --password-stdin ghcr.io
-      - run: docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e HOME="$RUNNER_TEMP/ch" -v "$RUNNER_TEMP/ch:$RUNNER_TEMP/ch" -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" -v /var/run/docker.sock:/var/run/docker.sock $CH_IMAGE ch -p github wait --docker-socket
-      - run: docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e HOME="$RUNNER_TEMP/ch" -v "$RUNNER_TEMP/ch:$RUNNER_TEMP/ch" -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" -v /var/run/docker.sock:/var/run/docker.sock $CH_IMAGE ch -p github build base-ci --platform arm64 --build-id "$SNAPSHOT_ID"
-      - run: docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e HOME="$RUNNER_TEMP/ch" -v "$RUNNER_TEMP/ch:$RUNNER_TEMP/ch" -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" -v /var/run/docker.sock:/var/run/docker.sock $CH_IMAGE ch -p github sbom base-ci --platform arm64 --build-id "$SNAPSHOT_ID"
+      - run: docker network create ch-net
+      - run: docker run -d --name dind --privileged --network ch-net -e DOCKER_TLS_CERTDIR="" docker:dind
+      - run: echo "${{ secrets.GITHUB_TOKEN }}" | docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -i -e HOME="$RUNNER_TEMP/ch" -v "$RUNNER_TEMP/ch:$RUNNER_TEMP/ch" -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" --network ch-net -e DOCKER_HOST=tcp://dind:2375 $CH_IMAGE ch -p github login -u "${{ github.actor }}" --password-stdin ghcr.io
+      - run: docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e HOME="$RUNNER_TEMP/ch" -v "$RUNNER_TEMP/ch:$RUNNER_TEMP/ch" -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" --network ch-net -e DOCKER_HOST=tcp://dind:2375 $CH_IMAGE ch -p github wait --docker-socket
+      - run: docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e HOME="$RUNNER_TEMP/ch" -v "$RUNNER_TEMP/ch:$RUNNER_TEMP/ch" -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" --network ch-net -e DOCKER_HOST=tcp://dind:2375 $CH_IMAGE ch -p github build base-ci --platform arm64 --build-id "$SNAPSHOT_ID"
+      - run: docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e HOME="$RUNNER_TEMP/ch" -v "$RUNNER_TEMP/ch:$RUNNER_TEMP/ch" -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" --network ch-net -e DOCKER_HOST=tcp://dind:2375 $CH_IMAGE ch -p github sbom base-ci --platform arm64 --build-id "$SNAPSHOT_ID"
 
 
   manifest-base-ci:
@@ -102,9 +106,11 @@ jobs:
           name: generated
           path: github/dist/
       - run: mkdir -p "$RUNNER_TEMP/ch"
-      - run: echo "${{ secrets.GITHUB_TOKEN }}" | docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -i -e HOME="$RUNNER_TEMP/ch" -v "$RUNNER_TEMP/ch:$RUNNER_TEMP/ch" -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" $CH_IMAGE ch -p github login -u "${{ github.actor }}" --password-stdin ghcr.io
-      - run: docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e HOME="$RUNNER_TEMP/ch" -v "$RUNNER_TEMP/ch:$RUNNER_TEMP/ch" -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" -v /var/run/docker.sock:/var/run/docker.sock $CH_IMAGE ch -p github wait --docker-socket
-      - run: docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e HOME="$RUNNER_TEMP/ch" -v "$RUNNER_TEMP/ch:$RUNNER_TEMP/ch" -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" -v /var/run/docker.sock:/var/run/docker.sock $CH_IMAGE ch -p github test base-ci --build-id "$SNAPSHOT_ID" --pull
+      - run: docker network create ch-net
+      - run: docker run -d --name dind --privileged --network ch-net -e DOCKER_TLS_CERTDIR="" docker:dind
+      - run: echo "${{ secrets.GITHUB_TOKEN }}" | docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -i -e HOME="$RUNNER_TEMP/ch" -v "$RUNNER_TEMP/ch:$RUNNER_TEMP/ch" -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" --network ch-net -e DOCKER_HOST=tcp://dind:2375 $CH_IMAGE ch -p github login -u "${{ github.actor }}" --password-stdin ghcr.io
+      - run: docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e HOME="$RUNNER_TEMP/ch" -v "$RUNNER_TEMP/ch:$RUNNER_TEMP/ch" -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" --network ch-net -e DOCKER_HOST=tcp://dind:2375 $CH_IMAGE ch -p github wait --docker-socket
+      - run: docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e HOME="$RUNNER_TEMP/ch" -v "$RUNNER_TEMP/ch:$RUNNER_TEMP/ch" -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" --network ch-net -e DOCKER_HOST=tcp://dind:2375 $CH_IMAGE ch -p github test base-ci --build-id "$SNAPSHOT_ID" --pull
   # === BASE-DEPLOYMENT ===
 
   build-base-deployment-amd64:
@@ -120,10 +126,12 @@ jobs:
           name: generated
           path: github/dist/
       - run: mkdir -p "$RUNNER_TEMP/ch"
-      - run: echo "${{ secrets.GITHUB_TOKEN }}" | docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -i -e HOME="$RUNNER_TEMP/ch" -v "$RUNNER_TEMP/ch:$RUNNER_TEMP/ch" -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" $CH_IMAGE ch -p github login -u "${{ github.actor }}" --password-stdin ghcr.io
-      - run: docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e HOME="$RUNNER_TEMP/ch" -v "$RUNNER_TEMP/ch:$RUNNER_TEMP/ch" -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" -v /var/run/docker.sock:/var/run/docker.sock $CH_IMAGE ch -p github wait --docker-socket
-      - run: docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e HOME="$RUNNER_TEMP/ch" -v "$RUNNER_TEMP/ch:$RUNNER_TEMP/ch" -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" -v /var/run/docker.sock:/var/run/docker.sock $CH_IMAGE ch -p github build base-deployment --platform amd64 --build-id "$SNAPSHOT_ID"
-      - run: docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e HOME="$RUNNER_TEMP/ch" -v "$RUNNER_TEMP/ch:$RUNNER_TEMP/ch" -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" -v /var/run/docker.sock:/var/run/docker.sock $CH_IMAGE ch -p github sbom base-deployment --platform amd64 --build-id "$SNAPSHOT_ID"
+      - run: docker network create ch-net
+      - run: docker run -d --name dind --privileged --network ch-net -e DOCKER_TLS_CERTDIR="" docker:dind
+      - run: echo "${{ secrets.GITHUB_TOKEN }}" | docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -i -e HOME="$RUNNER_TEMP/ch" -v "$RUNNER_TEMP/ch:$RUNNER_TEMP/ch" -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" --network ch-net -e DOCKER_HOST=tcp://dind:2375 $CH_IMAGE ch -p github login -u "${{ github.actor }}" --password-stdin ghcr.io
+      - run: docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e HOME="$RUNNER_TEMP/ch" -v "$RUNNER_TEMP/ch:$RUNNER_TEMP/ch" -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" --network ch-net -e DOCKER_HOST=tcp://dind:2375 $CH_IMAGE ch -p github wait --docker-socket
+      - run: docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e HOME="$RUNNER_TEMP/ch" -v "$RUNNER_TEMP/ch:$RUNNER_TEMP/ch" -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" --network ch-net -e DOCKER_HOST=tcp://dind:2375 $CH_IMAGE ch -p github build base-deployment --platform amd64 --build-id "$SNAPSHOT_ID"
+      - run: docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e HOME="$RUNNER_TEMP/ch" -v "$RUNNER_TEMP/ch:$RUNNER_TEMP/ch" -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" --network ch-net -e DOCKER_HOST=tcp://dind:2375 $CH_IMAGE ch -p github sbom base-deployment --platform amd64 --build-id "$SNAPSHOT_ID"
 
   build-base-deployment-arm64:
     runs-on: ubuntu-latest
@@ -138,10 +146,12 @@ jobs:
           name: generated
           path: github/dist/
       - run: mkdir -p "$RUNNER_TEMP/ch"
-      - run: echo "${{ secrets.GITHUB_TOKEN }}" | docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -i -e HOME="$RUNNER_TEMP/ch" -v "$RUNNER_TEMP/ch:$RUNNER_TEMP/ch" -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" $CH_IMAGE ch -p github login -u "${{ github.actor }}" --password-stdin ghcr.io
-      - run: docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e HOME="$RUNNER_TEMP/ch" -v "$RUNNER_TEMP/ch:$RUNNER_TEMP/ch" -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" -v /var/run/docker.sock:/var/run/docker.sock $CH_IMAGE ch -p github wait --docker-socket
-      - run: docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e HOME="$RUNNER_TEMP/ch" -v "$RUNNER_TEMP/ch:$RUNNER_TEMP/ch" -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" -v /var/run/docker.sock:/var/run/docker.sock $CH_IMAGE ch -p github build base-deployment --platform arm64 --build-id "$SNAPSHOT_ID"
-      - run: docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e HOME="$RUNNER_TEMP/ch" -v "$RUNNER_TEMP/ch:$RUNNER_TEMP/ch" -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" -v /var/run/docker.sock:/var/run/docker.sock $CH_IMAGE ch -p github sbom base-deployment --platform arm64 --build-id "$SNAPSHOT_ID"
+      - run: docker network create ch-net
+      - run: docker run -d --name dind --privileged --network ch-net -e DOCKER_TLS_CERTDIR="" docker:dind
+      - run: echo "${{ secrets.GITHUB_TOKEN }}" | docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -i -e HOME="$RUNNER_TEMP/ch" -v "$RUNNER_TEMP/ch:$RUNNER_TEMP/ch" -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" --network ch-net -e DOCKER_HOST=tcp://dind:2375 $CH_IMAGE ch -p github login -u "${{ github.actor }}" --password-stdin ghcr.io
+      - run: docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e HOME="$RUNNER_TEMP/ch" -v "$RUNNER_TEMP/ch:$RUNNER_TEMP/ch" -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" --network ch-net -e DOCKER_HOST=tcp://dind:2375 $CH_IMAGE ch -p github wait --docker-socket
+      - run: docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e HOME="$RUNNER_TEMP/ch" -v "$RUNNER_TEMP/ch:$RUNNER_TEMP/ch" -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" --network ch-net -e DOCKER_HOST=tcp://dind:2375 $CH_IMAGE ch -p github build base-deployment --platform arm64 --build-id "$SNAPSHOT_ID"
+      - run: docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e HOME="$RUNNER_TEMP/ch" -v "$RUNNER_TEMP/ch:$RUNNER_TEMP/ch" -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" --network ch-net -e DOCKER_HOST=tcp://dind:2375 $CH_IMAGE ch -p github sbom base-deployment --platform arm64 --build-id "$SNAPSHOT_ID"
 
 
   manifest-base-deployment:
@@ -174,6 +184,8 @@ jobs:
           name: generated
           path: github/dist/
       - run: mkdir -p "$RUNNER_TEMP/ch"
-      - run: echo "${{ secrets.GITHUB_TOKEN }}" | docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -i -e HOME="$RUNNER_TEMP/ch" -v "$RUNNER_TEMP/ch:$RUNNER_TEMP/ch" -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" $CH_IMAGE ch -p github login -u "${{ github.actor }}" --password-stdin ghcr.io
-      - run: docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e HOME="$RUNNER_TEMP/ch" -v "$RUNNER_TEMP/ch:$RUNNER_TEMP/ch" -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" -v /var/run/docker.sock:/var/run/docker.sock $CH_IMAGE ch -p github wait --docker-socket
-      - run: docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e HOME="$RUNNER_TEMP/ch" -v "$RUNNER_TEMP/ch:$RUNNER_TEMP/ch" -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" -v /var/run/docker.sock:/var/run/docker.sock $CH_IMAGE ch -p github test base-deployment --build-id "$SNAPSHOT_ID" --pull
+      - run: docker network create ch-net
+      - run: docker run -d --name dind --privileged --network ch-net -e DOCKER_TLS_CERTDIR="" docker:dind
+      - run: echo "${{ secrets.GITHUB_TOKEN }}" | docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -i -e HOME="$RUNNER_TEMP/ch" -v "$RUNNER_TEMP/ch:$RUNNER_TEMP/ch" -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" --network ch-net -e DOCKER_HOST=tcp://dind:2375 $CH_IMAGE ch -p github login -u "${{ github.actor }}" --password-stdin ghcr.io
+      - run: docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e HOME="$RUNNER_TEMP/ch" -v "$RUNNER_TEMP/ch:$RUNNER_TEMP/ch" -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" --network ch-net -e DOCKER_HOST=tcp://dind:2375 $CH_IMAGE ch -p github wait --docker-socket
+      - run: docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e HOME="$RUNNER_TEMP/ch" -v "$RUNNER_TEMP/ch:$RUNNER_TEMP/ch" -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" --network ch-net -e DOCKER_HOST=tcp://dind:2375 $CH_IMAGE ch -p github test base-deployment --build-id "$SNAPSHOT_ID" --pull
