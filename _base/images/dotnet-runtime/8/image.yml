@@ -1,10 +1,10 @@
 tags:
-  - name: 8.0.300
+  - name: 8.0.100
     versions:
-      dotnet-sdk-channel: 8.0.3xx
+      dotnet-sdk-channel: 8.0.25
   - name: 8.0.200
     versions:
-      dotnet-sdk-channel: 8.0.2xx
+      dotnet-sdk-channel: 8.0.23
 
 platforms:
   - linux/amd64
