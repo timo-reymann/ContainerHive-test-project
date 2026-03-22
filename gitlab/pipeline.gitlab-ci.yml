@@ -23,7 +23,7 @@ before_script:
 
 .build:
   image:
-    name: ghcr.io/timo-reymann/containerhive:96e0e34
+    name: ghcr.io/timo-reymann/containerhive:1b6ff64
     entrypoint: [""]
   services:
     - name: moby/buildkit:latest
@@ -44,14 +44,14 @@ before_script:
 
 .manifest:
   image:
-    name: ghcr.io/timo-reymann/containerhive:96e0e34
+    name: ghcr.io/timo-reymann/containerhive:1b6ff64
     entrypoint: [""]
   script:
     - ch -p gitlab finalize ${IMAGE_NAME} --build-id "$SNAPSHOT_ID"
 
 .test:
   image:
-    name: ghcr.io/timo-reymann/containerhive:96e0e34
+    name: ghcr.io/timo-reymann/containerhive:1b6ff64
     entrypoint: [""]
   stage: test
   services:
@@ -67,7 +67,7 @@ before_script:
 # === GENERATE ===
 generate:
   image:
-    name: ghcr.io/timo-reymann/containerhive:96e0e34
+    name: ghcr.io/timo-reymann/containerhive:1b6ff64
     entrypoint: [""]
   stage: generate
   script:
@@ -87,6 +87,9 @@ build-base-ci-amd64:
     PLATFORM: amd64
   needs:
     - generate
+  artifacts:
+    reports:
+      cyclonedx: gitlab/dist/base-ci/*/*/cyclonedx.json
 
 build-base-ci-arm64:
   extends: .build-arm64
@@ -96,6 +99,9 @@ build-base-ci-arm64:
     PLATFORM: arm64
   needs:
     - generate
+  artifacts:
+    reports:
+      cyclonedx: gitlab/dist/base-ci/*/*/cyclonedx.json
 
 
 manifest-base-ci:
@@ -115,6 +121,12 @@ test-base-ci:
   needs:
     - generate
     - manifest-base-ci
+  artifacts:
+    when: always
+    paths:
+      - gitlab/dist/**/*-cst-report.xml
+    reports:
+      junit: gitlab/dist/**/*-cst-report.xml
 # === BASE-DEPLOYMENT ===
 
 build-base-deployment-amd64:
@@ -125,6 +137,9 @@ build-base-deployment-amd64:
     PLATFORM: amd64
   needs:
     - generate
+  artifacts:
+    reports:
+      cyclonedx: gitlab/dist/base-deployment/*/*/cyclonedx.json
 
 build-base-deployment-arm64:
   extends: .build-arm64
@@ -134,6 +149,9 @@ build-base-deployment-arm64:
     PLATFORM: arm64
   needs:
     - generate
+  artifacts:
+    reports:
+      cyclonedx: gitlab/dist/base-deployment/*/*/cyclonedx.json
 
 
 manifest-base-deployment:
@@ -153,6 +171,12 @@ test-base-deployment:
   needs:
     - generate
     - manifest-base-deployment
+  artifacts:
+    when: always
+    paths:
+      - gitlab/dist/**/*-cst-report.xml
+    reports:
+      junit: gitlab/dist/**/*-cst-report.xml
 # === DOTNET-RUNTIME ===
 
 build-dotnet-runtime-amd64:
@@ -164,6 +188,9 @@ build-dotnet-runtime-amd64:
   needs:
     - generate
     - manifest-base-deployment
+  artifacts:
+    reports:
+      cyclonedx: gitlab/dist/dotnet-runtime/*/*/cyclonedx.json
 
 
 manifest-dotnet-runtime:
@@ -182,6 +209,12 @@ test-dotnet-runtime:
   needs:
     - generate
     - manifest-dotnet-runtime
+  artifacts:
+    when: always
+    paths:
+      - gitlab/dist/**/*-cst-report.xml
+    reports:
+      junit: gitlab/dist/**/*-cst-report.xml
 # === GO-CI ===
 
 build-go-ci-amd64:
@@ -193,6 +226,9 @@ build-go-ci-amd64:
   needs:
     - generate
     - manifest-base-ci
+  artifacts:
+    reports:
+      cyclonedx: gitlab/dist/go-ci/*/*/cyclonedx.json
 
 
 manifest-go-ci:
@@ -211,3 +247,9 @@ test-go-ci:
   needs:
     - generate
     - manifest-go-ci
+  artifacts:
+    when: always
+    paths:
+      - gitlab/dist/**/*-cst-report.xml
+    reports:
+      junit: gitlab/dist/**/*-cst-report.xml
