@@ -118,8 +118,7 @@ jobs:
         if: success() || failure()
         with:
           name: 'Test Results'
-            # github/dist/**/*-cst-report.xml
-          path: 'junit/test-results.xml'
+          path: 'github/dist/**/*-cst-report.xml'
           reporter: 'java-junit'
   # === BASE-DEPLOYMENT ===
 
@@ -206,8 +205,7 @@ jobs:
         if: success() || failure()
         with:
           name: 'Test Results'
-            # github/dist/**/*-cst-report.xml
-          path: 'junit/test-results.xml'
+          path: 'github/dist/**/*-cst-report.xml'
           reporter: 'java-junit'
   # === DOTNET-RUNTIME ===
 
@@ -274,8 +272,7 @@ jobs:
         if: success() || failure()
         with:
           name: 'Test Results'
-            # github/dist/**/*-cst-report.xml
-          path: 'junit/test-results.xml'
+          path: 'github/dist/**/*-cst-report.xml'
           reporter: 'java-junit'
   # === GO-CI ===
 
@@ -342,6 +339,5 @@ jobs:
         if: success() || failure()
         with:
           name: 'Test Results'
-            # github/dist/**/*-cst-report.xml
-          path: 'junit/test-results.xml'
+          path: 'github/dist/**/*-cst-report.xml'
           reporter: 'java-junit'
