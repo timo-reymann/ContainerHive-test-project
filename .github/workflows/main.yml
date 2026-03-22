@@ -82,7 +82,7 @@ jobs:
       - build-base-ci-amd64
       - build-base-ci-arm64
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           lfs: true
       - uses: actions/download-artifact@v4
@@ -98,7 +98,7 @@ jobs:
     needs:
       - manifest-base-ci
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           lfs: true
       - uses: actions/download-artifact@v4
@@ -161,7 +161,7 @@ jobs:
       - build-base-deployment-amd64
       - build-base-deployment-arm64
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           lfs: true
       - uses: actions/download-artifact@v4
@@ -177,7 +177,7 @@ jobs:
     needs:
       - manifest-base-deployment
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           lfs: true
       - uses: actions/download-artifact@v4
@@ -220,7 +220,7 @@ jobs:
     needs:
       - build-dotnet-runtime-amd64
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           lfs: true
       - uses: actions/download-artifact@v4
@@ -236,7 +236,7 @@ jobs:
     needs:
       - manifest-dotnet-runtime
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           lfs: true
       - uses: actions/download-artifact@v4
@@ -279,7 +279,7 @@ jobs:
     needs:
       - build-go-ci-amd64
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           lfs: true
       - uses: actions/download-artifact@v4
@@ -295,7 +295,7 @@ jobs:
     needs:
       - manifest-go-ci
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           lfs: true
       - uses: actions/download-artifact@v4
