@@ -47,7 +47,7 @@ jobs:
       - uses: actions/checkout@v6
         with:
           lfs: true
-      - uses: actions/download-artifact@v6
+      - uses: actions/download-artifact@v7
         with:
           name: generated
           path: github/dist/
@@ -72,7 +72,7 @@ jobs:
       - uses: actions/checkout@v6
         with:
           lfs: true
-      - uses: actions/download-artifact@v6
+      - uses: actions/download-artifact@v7
         with:
           name: generated
           path: github/dist/
@@ -99,7 +99,7 @@ jobs:
       - uses: actions/checkout@v6
         with:
           lfs: true
-      - uses: actions/download-artifact@v6
+      - uses: actions/download-artifact@v7
         with:
           name: generated
           path: github/dist/
@@ -115,7 +115,7 @@ jobs:
       - uses: actions/checkout@v6
         with:
           lfs: true
-      - uses: actions/download-artifact@v6
+      - uses: actions/download-artifact@v7
         with:
           name: generated
           path: github/dist/
@@ -131,11 +131,13 @@ jobs:
         uses: mikepenz/action-junit-report@v6
         if: success() || failure()
         with:
+          check_name: "Container Structure Tests - base-ci"
           report_paths: 'github/dist/**/*-cst-report.xml'
           require_tests: 'false'
           detailed_summary: 'true'
           comment: 'true'
           updateComment: 'true'
+          include_passed: 'true'
   # === BASE-DEPLOYMENT ===
 
   build-base-deployment-amd64:
@@ -146,7 +148,7 @@ jobs:
       - uses: actions/checkout@v6
         with:
           lfs: true
-      - uses: actions/download-artifact@v6
+      - uses: actions/download-artifact@v7
         with:
           name: generated
           path: github/dist/
@@ -171,7 +173,7 @@ jobs:
       - uses: actions/checkout@v6
         with:
           lfs: true
-      - uses: actions/download-artifact@v6
+      - uses: actions/download-artifact@v7
         with:
           name: generated
           path: github/dist/
@@ -198,7 +200,7 @@ jobs:
       - uses: actions/checkout@v6
         with:
           lfs: true
-      - uses: actions/download-artifact@v6
+      - uses: actions/download-artifact@v7
         with:
           name: generated
           path: github/dist/
@@ -214,7 +216,7 @@ jobs:
       - uses: actions/checkout@v6
         with:
           lfs: true
-      - uses: actions/download-artifact@v6
+      - uses: actions/download-artifact@v7
         with:
           name: generated
           path: github/dist/
@@ -230,11 +232,13 @@ jobs:
         uses: mikepenz/action-junit-report@v6
         if: success() || failure()
         with:
+          check_name: "Container Structure Tests - base-deployment"
           report_paths: 'github/dist/**/*-cst-report.xml'
           require_tests: 'false'
           detailed_summary: 'true'
           comment: 'true'
           updateComment: 'true'
+          include_passed: 'true'
   # === DOTNET-RUNTIME ===
 
   build-dotnet-runtime-amd64:
@@ -246,7 +250,7 @@ jobs:
       - uses: actions/checkout@v6
         with:
           lfs: true
-      - uses: actions/download-artifact@v6
+      - uses: actions/download-artifact@v7
         with:
           name: generated
           path: github/dist/
@@ -272,7 +276,7 @@ jobs:
       - uses: actions/checkout@v6
         with:
           lfs: true
-      - uses: actions/download-artifact@v6
+      - uses: actions/download-artifact@v7
         with:
           name: generated
           path: github/dist/
@@ -288,7 +292,7 @@ jobs:
       - uses: actions/checkout@v6
         with:
           lfs: true
-      - uses: actions/download-artifact@v6
+      - uses: actions/download-artifact@v7
         with:
           name: generated
           path: github/dist/
@@ -304,11 +308,13 @@ jobs:
         uses: mikepenz/action-junit-report@v6
         if: success() || failure()
         with:
+          check_name: "Container Structure Tests - dotnet-runtime"
           report_paths: 'github/dist/**/*-cst-report.xml'
           require_tests: 'false'
           detailed_summary: 'true'
           comment: 'true'
           updateComment: 'true'
+          include_passed: 'true'
   # === GO-CI ===
 
   build-go-ci-amd64:
@@ -320,7 +326,7 @@ jobs:
       - uses: actions/checkout@v6
         with:
           lfs: true
-      - uses: actions/download-artifact@v6
+      - uses: actions/download-artifact@v7
         with:
           name: generated
           path: github/dist/
@@ -346,7 +352,7 @@ jobs:
       - uses: actions/checkout@v6
         with:
           lfs: true
-      - uses: actions/download-artifact@v6
+      - uses: actions/download-artifact@v7
         with:
           name: generated
           path: github/dist/
@@ -362,7 +368,7 @@ jobs:
       - uses: actions/checkout@v6
         with:
           lfs: true
-      - uses: actions/download-artifact@v6
+      - uses: actions/download-artifact@v7
         with:
           name: generated
           path: github/dist/
@@ -378,8 +384,10 @@ jobs:
         uses: mikepenz/action-junit-report@v6
         if: success() || failure()
         with:
+          check_name: "Container Structure Tests - go-ci"
           report_paths: 'github/dist/**/*-cst-report.xml'
           require_tests: 'false'
           detailed_summary: 'true'
           comment: 'true'
           updateComment: 'true'
+          include_passed: 'true'
