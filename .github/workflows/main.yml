@@ -14,7 +14,7 @@ permissions:
 
 env:
   SNAPSHOT_ID: "${{ github.event.pull_request.number }}"
-  CH_IMAGE: ghcr.io/timo-reymann/containerhive:96e0e34
+  CH_IMAGE: ghcr.io/timo-reymann/containerhive:711f39c
 
 jobs:
   # === GENERATE ===
@@ -112,6 +112,15 @@ jobs:
       - run: echo "${{ secrets.GITHUB_TOKEN }}" | docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e CI=1 -i -e HOME="$RUNNER_TEMP/ch" -v "$RUNNER_TEMP/ch:$RUNNER_TEMP/ch" -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" --network ch-net -e DOCKER_HOST=tcp://dind:2375 $CH_IMAGE ch -p github login -u "${{ github.actor }}" --password-stdin ghcr.io
       - run: docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e CI=1 -e HOME="$RUNNER_TEMP/ch" -v "$RUNNER_TEMP/ch:$RUNNER_TEMP/ch" -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" --network ch-net -e DOCKER_HOST=tcp://dind:2375 $CH_IMAGE ch -p github wait --docker-socket
       - run: docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e CI=1 -e HOME="$RUNNER_TEMP/ch" -v "$RUNNER_TEMP/ch:$RUNNER_TEMP/ch" -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" --network ch-net -e DOCKER_HOST=tcp://dind:2375 $CH_IMAGE ch -p github test base-ci --build-id "$SNAPSHOT_ID"
+      - name: Publish Test Report
+        id: test-report
+        uses: dorny/test-reporter@v2
+        if: matrix.report && (success() || failure())
+        with:
+          name: 'Test Results'
+            # github/dist/**/*-cst-report.xml
+          path: 'junit/test-results.xml'
+          reporter: 'java-junit'
   # === BASE-DEPLOYMENT ===
 
   build-base-deployment-amd64:
@@ -191,6 +200,15 @@ jobs:
       - run: echo "${{ secrets.GITHUB_TOKEN }}" | docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e CI=1 -i -e HOME="$RUNNER_TEMP/ch" -v "$RUNNER_TEMP/ch:$RUNNER_TEMP/ch" -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" --network ch-net -e DOCKER_HOST=tcp://dind:2375 $CH_IMAGE ch -p github login -u "${{ github.actor }}" --password-stdin ghcr.io
       - run: docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e CI=1 -e HOME="$RUNNER_TEMP/ch" -v "$RUNNER_TEMP/ch:$RUNNER_TEMP/ch" -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" --network ch-net -e DOCKER_HOST=tcp://dind:2375 $CH_IMAGE ch -p github wait --docker-socket
       - run: docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e CI=1 -e HOME="$RUNNER_TEMP/ch" -v "$RUNNER_TEMP/ch:$RUNNER_TEMP/ch" -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" --network ch-net -e DOCKER_HOST=tcp://dind:2375 $CH_IMAGE ch -p github test base-deployment --build-id "$SNAPSHOT_ID"
+      - name: Publish Test Report
+        id: test-report
+        uses: dorny/test-reporter@v2
+        if: matrix.report && (success() || failure())
+        with:
+          name: 'Test Results'
+            # github/dist/**/*-cst-report.xml
+          path: 'junit/test-results.xml'
+          reporter: 'java-junit'
   # === DOTNET-RUNTIME ===
 
   build-dotnet-runtime-amd64:
@@ -250,6 +268,15 @@ jobs:
       - run: echo "${{ secrets.GITHUB_TOKEN }}" | docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e CI=1 -i -e HOME="$RUNNER_TEMP/ch" -v "$RUNNER_TEMP/ch:$RUNNER_TEMP/ch" -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" --network ch-net -e DOCKER_HOST=tcp://dind:2375 $CH_IMAGE ch -p github login -u "${{ github.actor }}" --password-stdin ghcr.io
       - run: docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e CI=1 -e HOME="$RUNNER_TEMP/ch" -v "$RUNNER_TEMP/ch:$RUNNER_TEMP/ch" -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" --network ch-net -e DOCKER_HOST=tcp://dind:2375 $CH_IMAGE ch -p github wait --docker-socket
       - run: docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e CI=1 -e HOME="$RUNNER_TEMP/ch" -v "$RUNNER_TEMP/ch:$RUNNER_TEMP/ch" -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" --network ch-net -e DOCKER_HOST=tcp://dind:2375 $CH_IMAGE ch -p github test dotnet-runtime --build-id "$SNAPSHOT_ID"
+      - name: Publish Test Report
+        id: test-report
+        uses: dorny/test-reporter@v2
+        if: matrix.report && (success() || failure())
+        with:
+          name: 'Test Results'
+            # github/dist/**/*-cst-report.xml
+          path: 'junit/test-results.xml'
+          reporter: 'java-junit'
   # === GO-CI ===
 
   build-go-ci-amd64:
@@ -309,3 +336,12 @@ jobs:
       - run: echo "${{ secrets.GITHUB_TOKEN }}" | docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e CI=1 -i -e HOME="$RUNNER_TEMP/ch" -v "$RUNNER_TEMP/ch:$RUNNER_TEMP/ch" -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" --network ch-net -e DOCKER_HOST=tcp://dind:2375 $CH_IMAGE ch -p github login -u "${{ github.actor }}" --password-stdin ghcr.io
       - run: docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e CI=1 -e HOME="$RUNNER_TEMP/ch" -v "$RUNNER_TEMP/ch:$RUNNER_TEMP/ch" -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" --network ch-net -e DOCKER_HOST=tcp://dind:2375 $CH_IMAGE ch -p github wait --docker-socket
       - run: docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e CI=1 -e HOME="$RUNNER_TEMP/ch" -v "$RUNNER_TEMP/ch:$RUNNER_TEMP/ch" -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" --network ch-net -e DOCKER_HOST=tcp://dind:2375 $CH_IMAGE ch -p github test go-ci --build-id "$SNAPSHOT_ID"
+      - name: Publish Test Report
+        id: test-report
+        uses: dorny/test-reporter@v2
+        if: matrix.report && (success() || failure())
+        with:
+          name: 'Test Results'
+            # github/dist/**/*-cst-report.xml
+          path: 'junit/test-results.xml'
+          reporter: 'java-junit'
