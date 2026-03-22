@@ -115,7 +115,7 @@ jobs:
       - name: Publish Test Report
         id: test-report
         uses: dorny/test-reporter@v2
-        if: matrix.report && (success() || failure())
+        if: success() || failure()
         with:
           name: 'Test Results'
             # github/dist/**/*-cst-report.xml
@@ -203,7 +203,7 @@ jobs:
       - name: Publish Test Report
         id: test-report
         uses: dorny/test-reporter@v2
-        if: matrix.report && (success() || failure())
+        if: success() || failure()
         with:
           name: 'Test Results'
             # github/dist/**/*-cst-report.xml
@@ -271,7 +271,7 @@ jobs:
       - name: Publish Test Report
         id: test-report
         uses: dorny/test-reporter@v2
-        if: matrix.report && (success() || failure())
+        if: success() || failure()
         with:
           name: 'Test Results'
             # github/dist/**/*-cst-report.xml
@@ -339,7 +339,7 @@ jobs:
       - name: Publish Test Report
         id: test-report
         uses: dorny/test-reporter@v2
-        if: matrix.report && (success() || failure())
+        if: success() || failure()
         with:
           name: 'Test Results'
             # github/dist/**/*-cst-report.xml
