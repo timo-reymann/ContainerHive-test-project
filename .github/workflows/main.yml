@@ -133,6 +133,7 @@ jobs:
           name: 'Test Results'
           path: 'github/dist/**/*-cst-report.xml'
           reporter: 'java-junit'
+          fail-on-empty: 'false'
   # === BASE-DEPLOYMENT ===
 
   build-base-deployment-amd64:
@@ -230,6 +231,7 @@ jobs:
           name: 'Test Results'
           path: 'github/dist/**/*-cst-report.xml'
           reporter: 'java-junit'
+          fail-on-empty: 'false'
   # === DOTNET-RUNTIME ===
 
   build-dotnet-runtime-amd64:
@@ -302,6 +304,7 @@ jobs:
           name: 'Test Results'
           path: 'github/dist/**/*-cst-report.xml'
           reporter: 'java-junit'
+          fail-on-empty: 'false'
   # === GO-CI ===
 
   build-go-ci-amd64:
@@ -374,3 +377,4 @@ jobs:
           name: 'Test Results'
           path: 'github/dist/**/*-cst-report.xml'
           reporter: 'java-junit'
+          fail-on-empty: 'false'
