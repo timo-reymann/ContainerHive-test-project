@@ -14,6 +14,7 @@ permissions:
   contents: read
   actions: read
   checks: write
+  pull-requests: write
 
 env:
   SNAPSHOT_ID: "${{ github.event.pull_request.number }}"
@@ -30,7 +31,7 @@ jobs:
       - run: mkdir -p "$RUNNER_TEMP/ch"
       - run: echo "${{ secrets.GITHUB_TOKEN }}" | docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e CI=1 -i -e HOME="$RUNNER_TEMP/ch" -v "$RUNNER_TEMP/ch:$RUNNER_TEMP/ch" -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" $CH_IMAGE ch -p github login -u "${{ github.actor }}" --password-stdin ghcr.io
       - run: docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e CI=1 -e HOME="$RUNNER_TEMP/ch" -v "$RUNNER_TEMP/ch:$RUNNER_TEMP/ch" -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" $CH_IMAGE ch -p github generate --build-id "$SNAPSHOT_ID"
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: generated
           path: github/dist/
@@ -46,7 +47,7 @@ jobs:
       - uses: actions/checkout@v6
         with:
           lfs: true
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v6
         with:
           name: generated
           path: github/dist/
@@ -57,7 +58,7 @@ jobs:
       - run: docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e CI=1 -e HOME="$RUNNER_TEMP/ch" -v "$RUNNER_TEMP/ch:$RUNNER_TEMP/ch" -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" --network ch-net -e BUILDKIT_HOST=tcp://buildkitd:8372 $CH_IMAGE ch -p github wait --buildkitd
       - run: docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e CI=1 -e HOME="$RUNNER_TEMP/ch" -v "$RUNNER_TEMP/ch:$RUNNER_TEMP/ch" -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" --network ch-net -e BUILDKIT_HOST=tcp://buildkitd:8372 $CH_IMAGE ch -p github build base-ci --platform amd64 --build-id "$SNAPSHOT_ID"
       - run: docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e CI=1 -e HOME="$RUNNER_TEMP/ch" -v "$RUNNER_TEMP/ch:$RUNNER_TEMP/ch" -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" --network ch-net -e BUILDKIT_HOST=tcp://buildkitd:8372 $CH_IMAGE ch -p github sbom base-ci --platform amd64 --build-id "$SNAPSHOT_ID"
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: base-ci-amd64-sbom
           path: github/dist/*/*/*/sbom.*
@@ -71,7 +72,7 @@ jobs:
       - uses: actions/checkout@v6
         with:
           lfs: true
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v6
         with:
           name: generated
           path: github/dist/
@@ -82,7 +83,7 @@ jobs:
       - run: docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e CI=1 -e HOME="$RUNNER_TEMP/ch" -v "$RUNNER_TEMP/ch:$RUNNER_TEMP/ch" -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" --network ch-net -e BUILDKIT_HOST=tcp://buildkitd:8372 $CH_IMAGE ch -p github wait --buildkitd
       - run: docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e CI=1 -e HOME="$RUNNER_TEMP/ch" -v "$RUNNER_TEMP/ch:$RUNNER_TEMP/ch" -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" --network ch-net -e BUILDKIT_HOST=tcp://buildkitd:8372 $CH_IMAGE ch -p github build base-ci --platform arm64 --build-id "$SNAPSHOT_ID"
       - run: docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e CI=1 -e HOME="$RUNNER_TEMP/ch" -v "$RUNNER_TEMP/ch:$RUNNER_TEMP/ch" -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" --network ch-net -e BUILDKIT_HOST=tcp://buildkitd:8372 $CH_IMAGE ch -p github sbom base-ci --platform arm64 --build-id "$SNAPSHOT_ID"
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: base-ci-arm64-sbom
           path: github/dist/*/*/*/sbom.*
@@ -98,7 +99,7 @@ jobs:
       - uses: actions/checkout@v6
         with:
           lfs: true
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v6
         with:
           name: generated
           path: github/dist/
@@ -114,7 +115,7 @@ jobs:
       - uses: actions/checkout@v6
         with:
           lfs: true
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v6
         with:
           name: generated
           path: github/dist/
@@ -127,13 +128,14 @@ jobs:
       - run: docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e CI=1 -e HOME="$RUNNER_TEMP/ch" -v "$RUNNER_TEMP/ch:$RUNNER_TEMP/ch" -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" --network ch-net -e DOCKER_HOST=tcp://dind:2375 $CH_IMAGE ch -p github test base-ci --build-id "$SNAPSHOT_ID"
       - name: Publish Test Report
         id: test-report
-        uses: dorny/test-reporter@v2
+        uses: mikepenz/action-junit-report@v6
         if: success() || failure()
         with:
-          name: 'Test Results'
-          path: 'github/dist/**/*-cst-report.xml'
-          reporter: 'java-junit'
-          fail-on-empty: 'false'
+          report_paths: 'github/dist/**/*-cst-report.xml'
+          require_tests: 'false'
+          detailed_summary: 'true'
+          comment: 'true'
+          updateComment: 'true'
   # === BASE-DEPLOYMENT ===
 
   build-base-deployment-amd64:
@@ -144,7 +146,7 @@ jobs:
       - uses: actions/checkout@v6
         with:
           lfs: true
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v6
         with:
           name: generated
           path: github/dist/
@@ -155,7 +157,7 @@ jobs:
       - run: docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e CI=1 -e HOME="$RUNNER_TEMP/ch" -v "$RUNNER_TEMP/ch:$RUNNER_TEMP/ch" -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" --network ch-net -e BUILDKIT_HOST=tcp://buildkitd:8372 $CH_IMAGE ch -p github wait --buildkitd
       - run: docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e CI=1 -e HOME="$RUNNER_TEMP/ch" -v "$RUNNER_TEMP/ch:$RUNNER_TEMP/ch" -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" --network ch-net -e BUILDKIT_HOST=tcp://buildkitd:8372 $CH_IMAGE ch -p github build base-deployment --platform amd64 --build-id "$SNAPSHOT_ID"
       - run: docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e CI=1 -e HOME="$RUNNER_TEMP/ch" -v "$RUNNER_TEMP/ch:$RUNNER_TEMP/ch" -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" --network ch-net -e BUILDKIT_HOST=tcp://buildkitd:8372 $CH_IMAGE ch -p github sbom base-deployment --platform amd64 --build-id "$SNAPSHOT_ID"
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: base-deployment-amd64-sbom
           path: github/dist/*/*/*/sbom.*
@@ -169,7 +171,7 @@ jobs:
       - uses: actions/checkout@v6
         with:
           lfs: true
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v6
         with:
           name: generated
           path: github/dist/
@@ -180,7 +182,7 @@ jobs:
       - run: docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e CI=1 -e HOME="$RUNNER_TEMP/ch" -v "$RUNNER_TEMP/ch:$RUNNER_TEMP/ch" -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" --network ch-net -e BUILDKIT_HOST=tcp://buildkitd:8372 $CH_IMAGE ch -p github wait --buildkitd
       - run: docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e CI=1 -e HOME="$RUNNER_TEMP/ch" -v "$RUNNER_TEMP/ch:$RUNNER_TEMP/ch" -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" --network ch-net -e BUILDKIT_HOST=tcp://buildkitd:8372 $CH_IMAGE ch -p github build base-deployment --platform arm64 --build-id "$SNAPSHOT_ID"
       - run: docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e CI=1 -e HOME="$RUNNER_TEMP/ch" -v "$RUNNER_TEMP/ch:$RUNNER_TEMP/ch" -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" --network ch-net -e BUILDKIT_HOST=tcp://buildkitd:8372 $CH_IMAGE ch -p github sbom base-deployment --platform arm64 --build-id "$SNAPSHOT_ID"
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: base-deployment-arm64-sbom
           path: github/dist/*/*/*/sbom.*
@@ -196,7 +198,7 @@ jobs:
       - uses: actions/checkout@v6
         with:
           lfs: true
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v6
         with:
           name: generated
           path: github/dist/
@@ -212,7 +214,7 @@ jobs:
       - uses: actions/checkout@v6
         with:
           lfs: true
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v6
         with:
           name: generated
           path: github/dist/
@@ -225,13 +227,14 @@ jobs:
       - run: docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e CI=1 -e HOME="$RUNNER_TEMP/ch" -v "$RUNNER_TEMP/ch:$RUNNER_TEMP/ch" -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" --network ch-net -e DOCKER_HOST=tcp://dind:2375 $CH_IMAGE ch -p github test base-deployment --build-id "$SNAPSHOT_ID"
       - name: Publish Test Report
         id: test-report
-        uses: dorny/test-reporter@v2
+        uses: mikepenz/action-junit-report@v6
         if: success() || failure()
         with:
-          name: 'Test Results'
-          path: 'github/dist/**/*-cst-report.xml'
-          reporter: 'java-junit'
-          fail-on-empty: 'false'
+          report_paths: 'github/dist/**/*-cst-report.xml'
+          require_tests: 'false'
+          detailed_summary: 'true'
+          comment: 'true'
+          updateComment: 'true'
   # === DOTNET-RUNTIME ===
 
   build-dotnet-runtime-amd64:
@@ -243,7 +246,7 @@ jobs:
       - uses: actions/checkout@v6
         with:
           lfs: true
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v6
         with:
           name: generated
           path: github/dist/
@@ -254,7 +257,7 @@ jobs:
       - run: docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e CI=1 -e HOME="$RUNNER_TEMP/ch" -v "$RUNNER_TEMP/ch:$RUNNER_TEMP/ch" -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" --network ch-net -e BUILDKIT_HOST=tcp://buildkitd:8372 $CH_IMAGE ch -p github wait --buildkitd
       - run: docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e CI=1 -e HOME="$RUNNER_TEMP/ch" -v "$RUNNER_TEMP/ch:$RUNNER_TEMP/ch" -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" --network ch-net -e BUILDKIT_HOST=tcp://buildkitd:8372 $CH_IMAGE ch -p github build dotnet-runtime --platform amd64 --build-id "$SNAPSHOT_ID"
       - run: docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e CI=1 -e HOME="$RUNNER_TEMP/ch" -v "$RUNNER_TEMP/ch:$RUNNER_TEMP/ch" -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" --network ch-net -e BUILDKIT_HOST=tcp://buildkitd:8372 $CH_IMAGE ch -p github sbom dotnet-runtime --platform amd64 --build-id "$SNAPSHOT_ID"
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: dotnet-runtime-amd64-sbom
           path: github/dist/*/*/*/sbom.*
@@ -269,7 +272,7 @@ jobs:
       - uses: actions/checkout@v6
         with:
           lfs: true
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v6
         with:
           name: generated
           path: github/dist/
@@ -285,7 +288,7 @@ jobs:
       - uses: actions/checkout@v6
         with:
           lfs: true
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v6
         with:
           name: generated
           path: github/dist/
@@ -298,13 +301,14 @@ jobs:
       - run: docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e CI=1 -e HOME="$RUNNER_TEMP/ch" -v "$RUNNER_TEMP/ch:$RUNNER_TEMP/ch" -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" --network ch-net -e DOCKER_HOST=tcp://dind:2375 $CH_IMAGE ch -p github test dotnet-runtime --build-id "$SNAPSHOT_ID"
       - name: Publish Test Report
         id: test-report
-        uses: dorny/test-reporter@v2
+        uses: mikepenz/action-junit-report@v6
         if: success() || failure()
         with:
-          name: 'Test Results'
-          path: 'github/dist/**/*-cst-report.xml'
-          reporter: 'java-junit'
-          fail-on-empty: 'false'
+          report_paths: 'github/dist/**/*-cst-report.xml'
+          require_tests: 'false'
+          detailed_summary: 'true'
+          comment: 'true'
+          updateComment: 'true'
   # === GO-CI ===
 
   build-go-ci-amd64:
@@ -316,7 +320,7 @@ jobs:
       - uses: actions/checkout@v6
         with:
           lfs: true
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v6
         with:
           name: generated
           path: github/dist/
@@ -327,7 +331,7 @@ jobs:
       - run: docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e CI=1 -e HOME="$RUNNER_TEMP/ch" -v "$RUNNER_TEMP/ch:$RUNNER_TEMP/ch" -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" --network ch-net -e BUILDKIT_HOST=tcp://buildkitd:8372 $CH_IMAGE ch -p github wait --buildkitd
       - run: docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e CI=1 -e HOME="$RUNNER_TEMP/ch" -v "$RUNNER_TEMP/ch:$RUNNER_TEMP/ch" -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" --network ch-net -e BUILDKIT_HOST=tcp://buildkitd:8372 $CH_IMAGE ch -p github build go-ci --platform amd64 --build-id "$SNAPSHOT_ID"
       - run: docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e CI=1 -e HOME="$RUNNER_TEMP/ch" -v "$RUNNER_TEMP/ch:$RUNNER_TEMP/ch" -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" --network ch-net -e BUILDKIT_HOST=tcp://buildkitd:8372 $CH_IMAGE ch -p github sbom go-ci --platform amd64 --build-id "$SNAPSHOT_ID"
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: go-ci-amd64-sbom
           path: github/dist/*/*/*/sbom.*
@@ -342,7 +346,7 @@ jobs:
       - uses: actions/checkout@v6
         with:
           lfs: true
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v6
         with:
           name: generated
           path: github/dist/
@@ -358,7 +362,7 @@ jobs:
       - uses: actions/checkout@v6
         with:
           lfs: true
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v6
         with:
           name: generated
           path: github/dist/
@@ -371,10 +375,11 @@ jobs:
       - run: docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e CI=1 -e HOME="$RUNNER_TEMP/ch" -v "$RUNNER_TEMP/ch:$RUNNER_TEMP/ch" -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" --network ch-net -e DOCKER_HOST=tcp://dind:2375 $CH_IMAGE ch -p github test go-ci --build-id "$SNAPSHOT_ID"
       - name: Publish Test Report
         id: test-report
-        uses: dorny/test-reporter@v2
+        uses: mikepenz/action-junit-report@v6
         if: success() || failure()
         with:
-          name: 'Test Results'
-          path: 'github/dist/**/*-cst-report.xml'
-          reporter: 'java-junit'
-          fail-on-empty: 'false'
+          report_paths: 'github/dist/**/*-cst-report.xml'
+          require_tests: 'false'
+          detailed_summary: 'true'
+          comment: 'true'
+          updateComment: 'true'
