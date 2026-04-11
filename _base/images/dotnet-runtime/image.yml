@@ -1,3 +1,5 @@
+description: ".NET runtime image for running ASP.NET Core and console applications."
+
 tags:
   - name: "8.0"
     versions:
@@ -8,3 +10,6 @@ tags:
 
 platforms:
   - linux/amd64
+
+report:
+  icon: "devicon-dotnetcore-plain"

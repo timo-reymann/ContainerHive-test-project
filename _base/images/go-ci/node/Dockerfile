@@ -1,0 +1,1 @@
+FROM __hive_parent__

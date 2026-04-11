@@ -1,2 +1,4 @@
+description: "Minimal base image optimized for production deployments."
+
 tags:
   - name: v1

@@ -1,2 +1,4 @@
+description: "Base CI image with essential build tools and common utilities."
+
 tags:
   - name: v1

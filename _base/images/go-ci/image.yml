@@ -1,3 +1,5 @@
+description: "Go programming language CI image with build tools and development utilities."
+
 tags:
   - name: "1.26.0"
     versions:
@@ -11,3 +13,12 @@ versions:
 
 platforms:
   - linux/amd64
+
+report:
+  icon: "devicon-go-original-wordmark"
+
+variants:
+  - name: node
+    tag_suffix: -node
+    versions:
+      nodejs: "24"
