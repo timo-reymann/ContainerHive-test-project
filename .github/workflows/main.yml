@@ -64,7 +64,7 @@ jobs:
       - uses: actions/upload-artifact@v7
         with:
           name: base-ci-amd64-sbom
-          path: github/dist/*/*/*/sbom.*
+          path: github/dist/*/*/*/cyclonedx.json
           retention-days: 30
 
   build-base-ci-arm64:
@@ -89,7 +89,7 @@ jobs:
       - uses: actions/upload-artifact@v7
         with:
           name: base-ci-arm64-sbom
-          path: github/dist/*/*/*/sbom.*
+          path: github/dist/*/*/*/cyclonedx.json
           retention-days: 30
 
 
@@ -165,7 +165,7 @@ jobs:
       - uses: actions/upload-artifact@v7
         with:
           name: base-deployment-amd64-sbom
-          path: github/dist/*/*/*/sbom.*
+          path: github/dist/*/*/*/cyclonedx.json
           retention-days: 30
 
   build-base-deployment-arm64:
@@ -190,7 +190,7 @@ jobs:
       - uses: actions/upload-artifact@v7
         with:
           name: base-deployment-arm64-sbom
-          path: github/dist/*/*/*/sbom.*
+          path: github/dist/*/*/*/cyclonedx.json
           retention-days: 30
 
 
@@ -267,7 +267,7 @@ jobs:
       - uses: actions/upload-artifact@v7
         with:
           name: dotnet-runtime-amd64-sbom
-          path: github/dist/*/*/*/sbom.*
+          path: github/dist/*/*/*/cyclonedx.json
           retention-days: 30
 
 
@@ -343,7 +343,7 @@ jobs:
       - uses: actions/upload-artifact@v7
         with:
           name: go-ci-amd64-sbom
-          path: github/dist/*/*/*/sbom.*
+          path: github/dist/*/*/*/cyclonedx.json
           retention-days: 30
 
 
