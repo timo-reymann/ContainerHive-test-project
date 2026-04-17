@@ -12,6 +12,8 @@ stages:
   - build-go-ci
   - manifest-go-ci
   - test
+  - report
+  - pages
 
 variables:
   SNAPSHOT_ID: ${CI_MERGE_REQUEST_IID}
@@ -23,10 +25,10 @@ before_script:
 
 .build:
   image:
-    name: ghcr.io/timo-reymann/containerhive:7621da4
+    name: ghcr.io/timo-reymann/containerhive:570df49
     entrypoint: [""]
   services:
-    - name: moby/buildkit:v0.28.0
+    - name: moby/buildkit:v0.28.1
       alias: buildkitd
       command: ["--addr", "tcp://0.0.0.0:8372"]
   variables:
@@ -44,14 +46,14 @@ before_script:
 
 .manifest:
   image:
-    name: ghcr.io/timo-reymann/containerhive:7621da4
+    name: ghcr.io/timo-reymann/containerhive:570df49
     entrypoint: [""]
   script:
     - ch -p gitlab finalize ${IMAGE_NAME} --build-id "$SNAPSHOT_ID"
 
 .test:
   image:
-    name: ghcr.io/timo-reymann/containerhive:7621da4
+    name: ghcr.io/timo-reymann/containerhive:570df49
     entrypoint: [""]
   stage: test
   services:
@@ -67,7 +69,7 @@ before_script:
 # === GENERATE ===
 generate:
   image:
-    name: ghcr.io/timo-reymann/containerhive:7621da4
+    name: ghcr.io/timo-reymann/containerhive:570df49
     entrypoint: [""]
   stage: generate
   script:
@@ -253,3 +255,32 @@ test-go-ci:
       - gitlab/dist/**/*-cst-report.xml
     reports:
       junit: gitlab/dist/**/*-cst-report.xml
+
+report:
+  image:
+    name: ghcr.io/timo-reymann/containerhive:570df49
+    entrypoint: [""]
+  stage: report
+  needs:
+      - build-base-ci-amd64
+      - build-base-ci-arm64
+      - build-base-deployment-amd64
+      - build-base-deployment-arm64
+      - build-dotnet-runtime-amd64
+      - build-go-ci-amd64
+  script:
+    - ch -p gitlab report
+    - ch -p gitlab report --json
+    - mkdir -p public
+    - mv gitlab/dist/report.html public/index.html
+    - mv gitlab/dist/report.json public/report.json
+  artifacts:
+    paths:
+      - public/
+    expose_as: "ContainerHive Report"
+    expire_in: 1 week
+
+pages:
+  extends: report
+  publish: true
+  stage: pages
