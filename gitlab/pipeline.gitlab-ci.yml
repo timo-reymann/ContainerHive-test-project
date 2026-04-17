@@ -25,7 +25,7 @@ before_script:
 
 .build:
   image:
-    name: ghcr.io/timo-reymann/containerhive:b3358cf
+    name: ghcr.io/timo-reymann/containerhive:f57f595
     entrypoint: [""]
   services:
     - name: moby/buildkit:v0.28.1
@@ -46,14 +46,14 @@ before_script:
 
 .manifest:
   image:
-    name: ghcr.io/timo-reymann/containerhive:b3358cf
+    name: ghcr.io/timo-reymann/containerhive:f57f595
     entrypoint: [""]
   script:
     - ch -p gitlab finalize ${IMAGE_NAME} --build-id "$SNAPSHOT_ID"
 
 .test:
   image:
-    name: ghcr.io/timo-reymann/containerhive:b3358cf
+    name: ghcr.io/timo-reymann/containerhive:f57f595
     entrypoint: [""]
   stage: test
   services:
@@ -69,7 +69,7 @@ before_script:
 # === GENERATE ===
 generate:
   image:
-    name: ghcr.io/timo-reymann/containerhive:b3358cf
+    name: ghcr.io/timo-reymann/containerhive:f57f595
     entrypoint: [""]
   stage: generate
   script:
@@ -258,10 +258,11 @@ test-go-ci:
 
 report:
   image:
-    name: ghcr.io/timo-reymann/containerhive:b3358cf
+    name: ghcr.io/timo-reymann/containerhive:f57f595
     entrypoint: [""]
   stage: report
   needs:
+    - generate
       - build-base-ci-amd64
       - build-base-ci-arm64
       - build-base-deployment-amd64

@@ -16,10 +16,11 @@ permissions:
   checks: write
   pull-requests: write
   pages: write
+  id-token: write
 
 env:
   SNAPSHOT_ID: "${{ github.event.pull_request.number }}"
-  CH_IMAGE: ghcr.io/timo-reymann/containerhive:b3358cf
+  CH_IMAGE: ghcr.io/timo-reymann/containerhive:f57f595
 
 jobs:
   # === GENERATE ===
