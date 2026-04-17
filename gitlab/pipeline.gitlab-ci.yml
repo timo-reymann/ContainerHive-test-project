@@ -287,3 +287,4 @@ pages:
   script:
     - echo "Deploy happens via convention on job name"
   stage: pages
+  before_script: []
