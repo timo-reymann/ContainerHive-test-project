@@ -263,12 +263,12 @@ report:
   stage: report
   needs:
     - generate
-      - build-base-ci-amd64
-      - build-base-ci-arm64
-      - build-base-deployment-amd64
-      - build-base-deployment-arm64
-      - build-dotnet-runtime-amd64
-      - build-go-ci-amd64
+    - build-base-ci-amd64
+    - build-base-ci-arm64
+    - build-base-deployment-amd64
+    - build-base-deployment-arm64
+    - build-dotnet-runtime-amd64
+    - build-go-ci-amd64
   script:
     - ch -p gitlab report
     - ch -p gitlab report --json
