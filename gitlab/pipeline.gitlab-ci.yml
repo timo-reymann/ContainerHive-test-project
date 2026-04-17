@@ -282,5 +282,6 @@ report:
 
 pages:
   extends: report
-  publish: true
+  script:
+    - echo "Deploy happens via convention on job name"
   stage: pages
