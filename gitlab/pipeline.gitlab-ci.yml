@@ -90,6 +90,8 @@ build-base-ci-amd64:
   needs:
     - generate
   artifacts:
+    paths:
+      - gitlab/dist/base-ci/*/*/cyclonedx.json
     reports:
       cyclonedx: gitlab/dist/base-ci/*/*/cyclonedx.json
 
@@ -102,6 +104,8 @@ build-base-ci-arm64:
   needs:
     - generate
   artifacts:
+    paths:
+      - gitlab/dist/base-ci/*/*/cyclonedx.json
     reports:
       cyclonedx: gitlab/dist/base-ci/*/*/cyclonedx.json
 
@@ -140,6 +144,8 @@ build-base-deployment-amd64:
   needs:
     - generate
   artifacts:
+    paths:
+      - gitlab/dist/base-deployment/*/*/cyclonedx.json
     reports:
       cyclonedx: gitlab/dist/base-deployment/*/*/cyclonedx.json
 
@@ -152,6 +158,8 @@ build-base-deployment-arm64:
   needs:
     - generate
   artifacts:
+    paths:
+      - gitlab/dist/base-deployment/*/*/cyclonedx.json
     reports:
       cyclonedx: gitlab/dist/base-deployment/*/*/cyclonedx.json
 
@@ -191,6 +199,8 @@ build-dotnet-runtime-amd64:
     - generate
     - manifest-base-deployment
   artifacts:
+    paths:
+      - gitlab/dist/dotnet-runtime/*/*/cyclonedx.json
     reports:
       cyclonedx: gitlab/dist/dotnet-runtime/*/*/cyclonedx.json
 
@@ -229,6 +239,8 @@ build-go-ci-amd64:
     - generate
     - manifest-base-ci
   artifacts:
+    paths:
+      - gitlab/dist/go-ci/*/*/cyclonedx.json
     reports:
       cyclonedx: gitlab/dist/go-ci/*/*/cyclonedx.json
 
