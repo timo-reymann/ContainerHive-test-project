@@ -4,14 +4,17 @@
 stages:
   - generate
   - build-base-ci
+  - test-base-ci
   - manifest-base-ci
   - build-base-deployment
+  - test-base-deployment
   - manifest-base-deployment
   - build-dotnet-runtime
+  - test-dotnet-runtime
   - manifest-dotnet-runtime
   - build-go-ci
+  - test-go-ci
   - manifest-go-ci
-  - test
   - report
   - pages
 
@@ -26,7 +29,7 @@ before_script:
 
 .build:
   image:
-    name: ghcr.io/timo-reymann/containerhive:4d88967
+    name: ghcr.io/timo-reymann/containerhive:0496793
     entrypoint: [""]
   services:
     - name: moby/buildkit:v0.28.1
@@ -47,16 +50,15 @@ before_script:
 
 .manifest:
   image:
-    name: ghcr.io/timo-reymann/containerhive:4d88967
+    name: ghcr.io/timo-reymann/containerhive:0496793
     entrypoint: [""]
   script:
     - ch -p gitlab finalize ${IMAGE_NAME} --build-id "$SNAPSHOT_ID"
 
 .test:
   image:
-    name: ghcr.io/timo-reymann/containerhive:4d88967
+    name: ghcr.io/timo-reymann/containerhive:0496793
     entrypoint: [""]
-  stage: test
   services:
     - name: docker:dind
       alias: dind
@@ -70,7 +72,7 @@ before_script:
 # === GENERATE ===
 generate:
   image:
-    name: ghcr.io/timo-reymann/containerhive:4d88967
+    name: ghcr.io/timo-reymann/containerhive:0496793
     entrypoint: [""]
   stage: generate
   script:
@@ -118,16 +120,19 @@ manifest-base-ci:
     IMAGE_NAME: base-ci
   needs:
     - generate
+    - test-base-ci
     - build-base-ci-amd64
     - build-base-ci-arm64
 
 test-base-ci:
   extends: .test
+  stage: test-base-ci
   variables:
     IMAGE_NAME: base-ci
   needs:
     - generate
-    - manifest-base-ci
+    - build-base-ci-amd64
+    - build-base-ci-arm64
   artifacts:
     when: always
     paths:
@@ -172,16 +177,19 @@ manifest-base-deployment:
     IMAGE_NAME: base-deployment
   needs:
     - generate
+    - test-base-deployment
     - build-base-deployment-amd64
     - build-base-deployment-arm64
 
 test-base-deployment:
   extends: .test
+  stage: test-base-deployment
   variables:
     IMAGE_NAME: base-deployment
   needs:
     - generate
-    - manifest-base-deployment
+    - build-base-deployment-amd64
+    - build-base-deployment-arm64
   artifacts:
     when: always
     paths:
@@ -213,15 +221,17 @@ manifest-dotnet-runtime:
     IMAGE_NAME: dotnet-runtime
   needs:
     - generate
+    - test-dotnet-runtime
     - build-dotnet-runtime-amd64
 
 test-dotnet-runtime:
   extends: .test
+  stage: test-dotnet-runtime
   variables:
     IMAGE_NAME: dotnet-runtime
   needs:
     - generate
-    - manifest-dotnet-runtime
+    - build-dotnet-runtime-amd64
   artifacts:
     when: always
     paths:
@@ -253,15 +263,17 @@ manifest-go-ci:
     IMAGE_NAME: go-ci
   needs:
     - generate
+    - test-go-ci
     - build-go-ci-amd64
 
 test-go-ci:
   extends: .test
+  stage: test-go-ci
   variables:
     IMAGE_NAME: go-ci
   needs:
     - generate
-    - manifest-go-ci
+    - build-go-ci-amd64
   artifacts:
     when: always
     paths:
@@ -271,7 +283,7 @@ test-go-ci:
 
 report:
   image:
-    name: ghcr.io/timo-reymann/containerhive:4d88967
+    name: ghcr.io/timo-reymann/containerhive:0496793
     entrypoint: [""]
   stage: report
   needs:
