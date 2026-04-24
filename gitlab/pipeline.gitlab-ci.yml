@@ -20,12 +20,13 @@ variables:
 
 before_script:
   - echo "$CI_REGISTRY_PASSWORD" | ch -p gitlab login -u "$CI_REGISTRY_USER" --password-stdin "$CI_REGISTRY"
+  - echo "$CONTAINER_HIVE_REGISTRY_PASSWORD" | ch -p gitlab login -u "$CONTAINER_HIVE_REGISTRY_USERNAME" --password-stdin "registry.gitlab.com"
 
 # === BASE TEMPLATES ===
 
 .build:
   image:
-    name: ghcr.io/timo-reymann/containerhive:62da38b
+    name: ghcr.io/timo-reymann/containerhive:f776ec1
     entrypoint: [""]
   services:
     - name: moby/buildkit:v0.28.1
@@ -46,14 +47,14 @@ before_script:
 
 .manifest:
   image:
-    name: ghcr.io/timo-reymann/containerhive:62da38b
+    name: ghcr.io/timo-reymann/containerhive:f776ec1
     entrypoint: [""]
   script:
     - ch -p gitlab finalize ${IMAGE_NAME} --build-id "$SNAPSHOT_ID"
 
 .test:
   image:
-    name: ghcr.io/timo-reymann/containerhive:62da38b
+    name: ghcr.io/timo-reymann/containerhive:f776ec1
     entrypoint: [""]
   stage: test
   services:
@@ -69,7 +70,7 @@ before_script:
 # === GENERATE ===
 generate:
   image:
-    name: ghcr.io/timo-reymann/containerhive:62da38b
+    name: ghcr.io/timo-reymann/containerhive:f776ec1
     entrypoint: [""]
   stage: generate
   script:
@@ -270,7 +271,7 @@ test-go-ci:
 
 report:
   image:
-    name: ghcr.io/timo-reymann/containerhive:62da38b
+    name: ghcr.io/timo-reymann/containerhive:f776ec1
     entrypoint: [""]
   stage: report
   needs:

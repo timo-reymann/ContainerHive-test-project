@@ -21,20 +21,27 @@ permissions:
 
 env:
   SNAPSHOT_ID: "${{ github.event.pull_request.number }}"
-  CH_IMAGE: ghcr.io/timo-reymann/containerhive:62da38b
+  CH_IMAGE: ghcr.io/timo-reymann/containerhive:f776ec1
 
 jobs:
   # === GENERATE ===
   generate:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - name: Checkout code
+        uses: actions/checkout@v6
         with:
           lfs: true
-      - run: mkdir -p "$RUNNER_TEMP/ch"
-      - run: echo "${{ secrets.GITHUB_TOKEN }}" | docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e CI=1 -i -e HOME="$RUNNER_TEMP/ch" -v "$RUNNER_TEMP/ch:$RUNNER_TEMP/ch" -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" $CH_IMAGE ch -p github login -u "${{ github.actor }}" --password-stdin ghcr.io
-      - run: docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e CI=1 -e HOME="$RUNNER_TEMP/ch" -v "$RUNNER_TEMP/ch:$RUNNER_TEMP/ch" -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" $CH_IMAGE ch -p github generate --build-id "$SNAPSHOT_ID"
-      - uses: actions/upload-artifact@v7
+      - name: Prepare temp directory
+        run: mkdir -p "$RUNNER_TEMP/ch"
+      - name: Login to registry
+        run: echo "${{ secrets.CONTAINER_HIVE_REGISTRY_PASSWORD }}" | docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e CI=1 -i -e HOME="$RUNNER_TEMP/ch" -v "$RUNNER_TEMP/ch:$RUNNER_TEMP/ch" -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" $CH_IMAGE ch -p github login -u "${{ secrets.CONTAINER_HIVE_REGISTRY_USERNAME }}" --password-stdin "ghcr.io"
+      - name: Login to GHCR
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e CI=1 -i -e HOME="$RUNNER_TEMP/ch" -v "$RUNNER_TEMP/ch:$RUNNER_TEMP/ch" -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" $CH_IMAGE ch -p github login -u "${{ github.actor }}" --password-stdin ghcr.io
+      - name: Generate build files
+        run: docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e CI=1 -e HOME="$RUNNER_TEMP/ch" -v "$RUNNER_TEMP/ch:$RUNNER_TEMP/ch" -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" $CH_IMAGE ch -p github generate --build-id "$SNAPSHOT_ID"
+      - name: Upload generated files
+        uses: actions/upload-artifact@v7
         with:
           name: generated
           path: github/dist/
@@ -47,21 +54,33 @@ jobs:
     needs:
       - generate
     steps:
-      - uses: actions/checkout@v6
+      - name: Checkout code
+        uses: actions/checkout@v6
         with:
           lfs: true
-      - uses: actions/download-artifact@v7
+      - name: Download generated files
+        uses: actions/download-artifact@v7
         with:
           name: generated
           path: github/dist/
-      - run: mkdir -p "$RUNNER_TEMP/ch"
-      - run: docker network create ch-net
-      - run: docker run -d --name buildkitd --privileged --network ch-net moby/buildkit:v0.28.1 --addr tcp://0.0.0.0:8372
-      - run: echo "${{ secrets.GITHUB_TOKEN }}" | docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e CI=1 -i -e HOME="$RUNNER_TEMP/ch" -v "$RUNNER_TEMP/ch:$RUNNER_TEMP/ch" -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" --network ch-net -e BUILDKIT_HOST=tcp://buildkitd:8372 $CH_IMAGE ch -p github login -u "${{ github.actor }}" --password-stdin ghcr.io
-      - run: docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e CI=1 -e HOME="$RUNNER_TEMP/ch" -v "$RUNNER_TEMP/ch:$RUNNER_TEMP/ch" -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" --network ch-net -e BUILDKIT_HOST=tcp://buildkitd:8372 $CH_IMAGE ch -p github wait --buildkitd
-      - run: docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e CI=1 -e HOME="$RUNNER_TEMP/ch" -v "$RUNNER_TEMP/ch:$RUNNER_TEMP/ch" -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" --network ch-net -e BUILDKIT_HOST=tcp://buildkitd:8372 $CH_IMAGE ch -p github build base-ci --platform amd64 --build-id "$SNAPSHOT_ID"
-      - run: docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e CI=1 -e HOME="$RUNNER_TEMP/ch" -v "$RUNNER_TEMP/ch:$RUNNER_TEMP/ch" -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" --network ch-net -e BUILDKIT_HOST=tcp://buildkitd:8372 $CH_IMAGE ch -p github sbom base-ci --platform amd64 --build-id "$SNAPSHOT_ID"
-      - uses: actions/upload-artifact@v7
+      - name: Prepare temp directory
+        run: mkdir -p "$RUNNER_TEMP/ch"
+      - name: Create Docker network
+        run: docker network create ch-net
+      - name: Start BuildKit daemon
+        run: docker run -d --name buildkitd --privileged --network ch-net moby/buildkit:v0.28.1 --addr tcp://0.0.0.0:8372
+      - name: Login to registry
+        run: echo "${{ secrets.CONTAINER_HIVE_REGISTRY_PASSWORD }}" | docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e CI=1 -i -e HOME="$RUNNER_TEMP/ch" -v "$RUNNER_TEMP/ch:$RUNNER_TEMP/ch" -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" --network ch-net -e BUILDKIT_HOST=tcp://buildkitd:8372 $CH_IMAGE ch -p github login -u "${{ secrets.CONTAINER_HIVE_REGISTRY_USERNAME }}" --password-stdin "ghcr.io"
+      - name: Login to GHCR
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e CI=1 -i -e HOME="$RUNNER_TEMP/ch" -v "$RUNNER_TEMP/ch:$RUNNER_TEMP/ch" -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" --network ch-net -e BUILDKIT_HOST=tcp://buildkitd:8372 $CH_IMAGE ch -p github login -u "${{ github.actor }}" --password-stdin ghcr.io
+      - name: Wait for BuildKit
+        run: docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e CI=1 -e HOME="$RUNNER_TEMP/ch" -v "$RUNNER_TEMP/ch:$RUNNER_TEMP/ch" -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" --network ch-net -e BUILDKIT_HOST=tcp://buildkitd:8372 $CH_IMAGE ch -p github wait --buildkitd
+      - name: Build image
+        run: docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e CI=1 -e HOME="$RUNNER_TEMP/ch" -v "$RUNNER_TEMP/ch:$RUNNER_TEMP/ch" -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" --network ch-net -e BUILDKIT_HOST=tcp://buildkitd:8372 $CH_IMAGE ch -p github build base-ci --platform amd64 --build-id "$SNAPSHOT_ID"
+      - name: Generate SBOM
+        run: docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e CI=1 -e HOME="$RUNNER_TEMP/ch" -v "$RUNNER_TEMP/ch:$RUNNER_TEMP/ch" -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" --network ch-net -e BUILDKIT_HOST=tcp://buildkitd:8372 $CH_IMAGE ch -p github sbom base-ci --platform amd64 --build-id "$SNAPSHOT_ID"
+      - name: Upload SBOM
+        uses: actions/upload-artifact@v7
         with:
           name: base-ci-amd64-sbom
           path: github/dist/*/*/*/cyclonedx.json
@@ -72,21 +91,33 @@ jobs:
     needs:
       - generate
     steps:
-      - uses: actions/checkout@v6
+      - name: Checkout code
+        uses: actions/checkout@v6
         with:
           lfs: true
-      - uses: actions/download-artifact@v7
+      - name: Download generated files
+        uses: actions/download-artifact@v7
         with:
           name: generated
           path: github/dist/
-      - run: mkdir -p "$RUNNER_TEMP/ch"
-      - run: docker network create ch-net
-      - run: docker run -d --name buildkitd --privileged --network ch-net moby/buildkit:v0.28.1 --addr tcp://0.0.0.0:8372
-      - run: echo "${{ secrets.GITHUB_TOKEN }}" | docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e CI=1 -i -e HOME="$RUNNER_TEMP/ch" -v "$RUNNER_TEMP/ch:$RUNNER_TEMP/ch" -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" --network ch-net -e BUILDKIT_HOST=tcp://buildkitd:8372 $CH_IMAGE ch -p github login -u "${{ github.actor }}" --password-stdin ghcr.io
-      - run: docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e CI=1 -e HOME="$RUNNER_TEMP/ch" -v "$RUNNER_TEMP/ch:$RUNNER_TEMP/ch" -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" --network ch-net -e BUILDKIT_HOST=tcp://buildkitd:8372 $CH_IMAGE ch -p github wait --buildkitd
-      - run: docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e CI=1 -e HOME="$RUNNER_TEMP/ch" -v "$RUNNER_TEMP/ch:$RUNNER_TEMP/ch" -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" --network ch-net -e BUILDKIT_HOST=tcp://buildkitd:8372 $CH_IMAGE ch -p github build base-ci --platform arm64 --build-id "$SNAPSHOT_ID"
-      - run: docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e CI=1 -e HOME="$RUNNER_TEMP/ch" -v "$RUNNER_TEMP/ch:$RUNNER_TEMP/ch" -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" --network ch-net -e BUILDKIT_HOST=tcp://buildkitd:8372 $CH_IMAGE ch -p github sbom base-ci --platform arm64 --build-id "$SNAPSHOT_ID"
-      - uses: actions/upload-artifact@v7
+      - name: Prepare temp directory
+        run: mkdir -p "$RUNNER_TEMP/ch"
+      - name: Create Docker network
+        run: docker network create ch-net
+      - name: Start BuildKit daemon
+        run: docker run -d --name buildkitd --privileged --network ch-net moby/buildkit:v0.28.1 --addr tcp://0.0.0.0:8372
+      - name: Login to registry
+        run: echo "${{ secrets.CONTAINER_HIVE_REGISTRY_PASSWORD }}" | docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e CI=1 -i -e HOME="$RUNNER_TEMP/ch" -v "$RUNNER_TEMP/ch:$RUNNER_TEMP/ch" -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" --network ch-net -e BUILDKIT_HOST=tcp://buildkitd:8372 $CH_IMAGE ch -p github login -u "${{ secrets.CONTAINER_HIVE_REGISTRY_USERNAME }}" --password-stdin "ghcr.io"
+      - name: Login to GHCR
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e CI=1 -i -e HOME="$RUNNER_TEMP/ch" -v "$RUNNER_TEMP/ch:$RUNNER_TEMP/ch" -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" --network ch-net -e BUILDKIT_HOST=tcp://buildkitd:8372 $CH_IMAGE ch -p github login -u "${{ github.actor }}" --password-stdin ghcr.io
+      - name: Wait for BuildKit
+        run: docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e CI=1 -e HOME="$RUNNER_TEMP/ch" -v "$RUNNER_TEMP/ch:$RUNNER_TEMP/ch" -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" --network ch-net -e BUILDKIT_HOST=tcp://buildkitd:8372 $CH_IMAGE ch -p github wait --buildkitd
+      - name: Build image
+        run: docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e CI=1 -e HOME="$RUNNER_TEMP/ch" -v "$RUNNER_TEMP/ch:$RUNNER_TEMP/ch" -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" --network ch-net -e BUILDKIT_HOST=tcp://buildkitd:8372 $CH_IMAGE ch -p github build base-ci --platform arm64 --build-id "$SNAPSHOT_ID"
+      - name: Generate SBOM
+        run: docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e CI=1 -e HOME="$RUNNER_TEMP/ch" -v "$RUNNER_TEMP/ch:$RUNNER_TEMP/ch" -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" --network ch-net -e BUILDKIT_HOST=tcp://buildkitd:8372 $CH_IMAGE ch -p github sbom base-ci --platform arm64 --build-id "$SNAPSHOT_ID"
+      - name: Upload SBOM
+        uses: actions/upload-artifact@v7
         with:
           name: base-ci-arm64-sbom
           path: github/dist/*/*/*/cyclonedx.json
@@ -99,36 +130,50 @@ jobs:
       - build-base-ci-amd64
       - build-base-ci-arm64
     steps:
-      - uses: actions/checkout@v6
+      - name: Checkout code
+        uses: actions/checkout@v6
         with:
           lfs: true
-      - uses: actions/download-artifact@v7
+      - name: Download generated files
+        uses: actions/download-artifact@v7
         with:
           name: generated
           path: github/dist/
-      - run: mkdir -p "$RUNNER_TEMP/ch"
-      - run: echo "${{ secrets.GITHUB_TOKEN }}" | docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e CI=1 -i -e HOME="$RUNNER_TEMP/ch" -v "$RUNNER_TEMP/ch:$RUNNER_TEMP/ch" -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" $CH_IMAGE ch -p github login -u "${{ github.actor }}" --password-stdin ghcr.io
-      - run: docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e CI=1 -e HOME="$RUNNER_TEMP/ch" -v "$RUNNER_TEMP/ch:$RUNNER_TEMP/ch" -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" $CH_IMAGE ch -p github finalize base-ci --build-id "$SNAPSHOT_ID"
+      - name: Prepare temp directory
+        run: mkdir -p "$RUNNER_TEMP/ch"
+      - name: Login to GHCR
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e CI=1 -i -e HOME="$RUNNER_TEMP/ch" -v "$RUNNER_TEMP/ch:$RUNNER_TEMP/ch" -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" $CH_IMAGE ch -p github login -u "${{ github.actor }}" --password-stdin ghcr.io
+      - name: Finalize manifest
+        run: docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e CI=1 -e HOME="$RUNNER_TEMP/ch" -v "$RUNNER_TEMP/ch:$RUNNER_TEMP/ch" -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" $CH_IMAGE ch -p github finalize base-ci --build-id "$SNAPSHOT_ID"
 
   test-base-ci:
     runs-on: ubuntu-latest
     needs:
       - manifest-base-ci
     steps:
-      - uses: actions/checkout@v6
+      - name: Checkout code
+        uses: actions/checkout@v6
         with:
           lfs: true
-      - uses: actions/download-artifact@v7
+      - name: Download generated files
+        uses: actions/download-artifact@v7
         with:
           name: generated
           path: github/dist/
-      - run: mkdir -p "$RUNNER_TEMP/ch"
-      - run: docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
-      - run: docker network create ch-net
-      - run: docker run -d --name dind --privileged --network ch-net -e DOCKER_TLS_CERTDIR="" docker:dind
-      - run: echo "${{ secrets.GITHUB_TOKEN }}" | docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e CI=1 -i -e HOME="$RUNNER_TEMP/ch" -v "$RUNNER_TEMP/ch:$RUNNER_TEMP/ch" -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" --network ch-net -e DOCKER_HOST=tcp://dind:2375 $CH_IMAGE ch -p github login -u "${{ github.actor }}" --password-stdin ghcr.io
-      - run: docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e CI=1 -e HOME="$RUNNER_TEMP/ch" -v "$RUNNER_TEMP/ch:$RUNNER_TEMP/ch" -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" --network ch-net -e DOCKER_HOST=tcp://dind:2375 $CH_IMAGE ch -p github wait --docker-socket
-      - run: docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e CI=1 -e HOME="$RUNNER_TEMP/ch" -v "$RUNNER_TEMP/ch:$RUNNER_TEMP/ch" -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" --network ch-net -e DOCKER_HOST=tcp://dind:2375 $CH_IMAGE ch -p github test base-ci --build-id "$SNAPSHOT_ID"
+      - name: Prepare temp directory
+        run: mkdir -p "$RUNNER_TEMP/ch"
+      - name: Setup QEMU
+        run: docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
+      - name: Create Docker network
+        run: docker network create ch-net
+      - name: Start Docker-in-Docker
+        run: docker run -d --name dind --privileged --network ch-net -e DOCKER_TLS_CERTDIR="" docker:dind
+      - name: Login to GHCR
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e CI=1 -i -e HOME="$RUNNER_TEMP/ch" -v "$RUNNER_TEMP/ch:$RUNNER_TEMP/ch" -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" --network ch-net -e DOCKER_HOST=tcp://dind:2375 $CH_IMAGE ch -p github login -u "${{ github.actor }}" --password-stdin ghcr.io
+      - name: Wait for Docker socket
+        run: docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e CI=1 -e HOME="$RUNNER_TEMP/ch" -v "$RUNNER_TEMP/ch:$RUNNER_TEMP/ch" -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" --network ch-net -e DOCKER_HOST=tcp://dind:2375 $CH_IMAGE ch -p github wait --docker-socket
+      - name: Run container tests
+        run: docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e CI=1 -e HOME="$RUNNER_TEMP/ch" -v "$RUNNER_TEMP/ch:$RUNNER_TEMP/ch" -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" --network ch-net -e DOCKER_HOST=tcp://dind:2375 $CH_IMAGE ch -p github test base-ci --build-id "$SNAPSHOT_ID"
       - name: Publish Test Report
         id: test-report
         uses: mikepenz/action-junit-report@v6
@@ -148,21 +193,33 @@ jobs:
     needs:
       - generate
     steps:
-      - uses: actions/checkout@v6
+      - name: Checkout code
+        uses: actions/checkout@v6
         with:
           lfs: true
-      - uses: actions/download-artifact@v7
+      - name: Download generated files
+        uses: actions/download-artifact@v7
         with:
           name: generated
           path: github/dist/
-      - run: mkdir -p "$RUNNER_TEMP/ch"
-      - run: docker network create ch-net
-      - run: docker run -d --name buildkitd --privileged --network ch-net moby/buildkit:v0.28.1 --addr tcp://0.0.0.0:8372
-      - run: echo "${{ secrets.GITHUB_TOKEN }}" | docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e CI=1 -i -e HOME="$RUNNER_TEMP/ch" -v "$RUNNER_TEMP/ch:$RUNNER_TEMP/ch" -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" --network ch-net -e BUILDKIT_HOST=tcp://buildkitd:8372 $CH_IMAGE ch -p github login -u "${{ github.actor }}" --password-stdin ghcr.io
-      - run: docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e CI=1 -e HOME="$RUNNER_TEMP/ch" -v "$RUNNER_TEMP/ch:$RUNNER_TEMP/ch" -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" --network ch-net -e BUILDKIT_HOST=tcp://buildkitd:8372 $CH_IMAGE ch -p github wait --buildkitd
-      - run: docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e CI=1 -e HOME="$RUNNER_TEMP/ch" -v "$RUNNER_TEMP/ch:$RUNNER_TEMP/ch" -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" --network ch-net -e BUILDKIT_HOST=tcp://buildkitd:8372 $CH_IMAGE ch -p github build base-deployment --platform amd64 --build-id "$SNAPSHOT_ID"
-      - run: docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e CI=1 -e HOME="$RUNNER_TEMP/ch" -v "$RUNNER_TEMP/ch:$RUNNER_TEMP/ch" -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" --network ch-net -e BUILDKIT_HOST=tcp://buildkitd:8372 $CH_IMAGE ch -p github sbom base-deployment --platform amd64 --build-id "$SNAPSHOT_ID"
-      - uses: actions/upload-artifact@v7
+      - name: Prepare temp directory
+        run: mkdir -p "$RUNNER_TEMP/ch"
+      - name: Create Docker network
+        run: docker network create ch-net
+      - name: Start BuildKit daemon
+        run: docker run -d --name buildkitd --privileged --network ch-net moby/buildkit:v0.28.1 --addr tcp://0.0.0.0:8372
+      - name: Login to registry
+        run: echo "${{ secrets.CONTAINER_HIVE_REGISTRY_PASSWORD }}" | docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e CI=1 -i -e HOME="$RUNNER_TEMP/ch" -v "$RUNNER_TEMP/ch:$RUNNER_TEMP/ch" -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" --network ch-net -e BUILDKIT_HOST=tcp://buildkitd:8372 $CH_IMAGE ch -p github login -u "${{ secrets.CONTAINER_HIVE_REGISTRY_USERNAME }}" --password-stdin "ghcr.io"
+      - name: Login to GHCR
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e CI=1 -i -e HOME="$RUNNER_TEMP/ch" -v "$RUNNER_TEMP/ch:$RUNNER_TEMP/ch" -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" --network ch-net -e BUILDKIT_HOST=tcp://buildkitd:8372 $CH_IMAGE ch -p github login -u "${{ github.actor }}" --password-stdin ghcr.io
+      - name: Wait for BuildKit
+        run: docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e CI=1 -e HOME="$RUNNER_TEMP/ch" -v "$RUNNER_TEMP/ch:$RUNNER_TEMP/ch" -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" --network ch-net -e BUILDKIT_HOST=tcp://buildkitd:8372 $CH_IMAGE ch -p github wait --buildkitd
+      - name: Build image
+        run: docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e CI=1 -e HOME="$RUNNER_TEMP/ch" -v "$RUNNER_TEMP/ch:$RUNNER_TEMP/ch" -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" --network ch-net -e BUILDKIT_HOST=tcp://buildkitd:8372 $CH_IMAGE ch -p github build base-deployment --platform amd64 --build-id "$SNAPSHOT_ID"
+      - name: Generate SBOM
+        run: docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e CI=1 -e HOME="$RUNNER_TEMP/ch" -v "$RUNNER_TEMP/ch:$RUNNER_TEMP/ch" -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" --network ch-net -e BUILDKIT_HOST=tcp://buildkitd:8372 $CH_IMAGE ch -p github sbom base-deployment --platform amd64 --build-id "$SNAPSHOT_ID"
+      - name: Upload SBOM
+        uses: actions/upload-artifact@v7
         with:
           name: base-deployment-amd64-sbom
           path: github/dist/*/*/*/cyclonedx.json
@@ -173,21 +230,33 @@ jobs:
     needs:
       - generate
     steps:
-      - uses: actions/checkout@v6
+      - name: Checkout code
+        uses: actions/checkout@v6
         with:
           lfs: true
-      - uses: actions/download-artifact@v7
+      - name: Download generated files
+        uses: actions/download-artifact@v7
         with:
           name: generated
           path: github/dist/
-      - run: mkdir -p "$RUNNER_TEMP/ch"
-      - run: docker network create ch-net
-      - run: docker run -d --name buildkitd --privileged --network ch-net moby/buildkit:v0.28.1 --addr tcp://0.0.0.0:8372
-      - run: echo "${{ secrets.GITHUB_TOKEN }}" | docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e CI=1 -i -e HOME="$RUNNER_TEMP/ch" -v "$RUNNER_TEMP/ch:$RUNNER_TEMP/ch" -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" --network ch-net -e BUILDKIT_HOST=tcp://buildkitd:8372 $CH_IMAGE ch -p github login -u "${{ github.actor }}" --password-stdin ghcr.io
-      - run: docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e CI=1 -e HOME="$RUNNER_TEMP/ch" -v "$RUNNER_TEMP/ch:$RUNNER_TEMP/ch" -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" --network ch-net -e BUILDKIT_HOST=tcp://buildkitd:8372 $CH_IMAGE ch -p github wait --buildkitd
-      - run: docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e CI=1 -e HOME="$RUNNER_TEMP/ch" -v "$RUNNER_TEMP/ch:$RUNNER_TEMP/ch" -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" --network ch-net -e BUILDKIT_HOST=tcp://buildkitd:8372 $CH_IMAGE ch -p github build base-deployment --platform arm64 --build-id "$SNAPSHOT_ID"
-      - run: docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e CI=1 -e HOME="$RUNNER_TEMP/ch" -v "$RUNNER_TEMP/ch:$RUNNER_TEMP/ch" -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" --network ch-net -e BUILDKIT_HOST=tcp://buildkitd:8372 $CH_IMAGE ch -p github sbom base-deployment --platform arm64 --build-id "$SNAPSHOT_ID"
-      - uses: actions/upload-artifact@v7
+      - name: Prepare temp directory
+        run: mkdir -p "$RUNNER_TEMP/ch"
+      - name: Create Docker network
+        run: docker network create ch-net
+      - name: Start BuildKit daemon
+        run: docker run -d --name buildkitd --privileged --network ch-net moby/buildkit:v0.28.1 --addr tcp://0.0.0.0:8372
+      - name: Login to registry
+        run: echo "${{ secrets.CONTAINER_HIVE_REGISTRY_PASSWORD }}" | docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e CI=1 -i -e HOME="$RUNNER_TEMP/ch" -v "$RUNNER_TEMP/ch:$RUNNER_TEMP/ch" -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" --network ch-net -e BUILDKIT_HOST=tcp://buildkitd:8372 $CH_IMAGE ch -p github login -u "${{ secrets.CONTAINER_HIVE_REGISTRY_USERNAME }}" --password-stdin "ghcr.io"
+      - name: Login to GHCR
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e CI=1 -i -e HOME="$RUNNER_TEMP/ch" -v "$RUNNER_TEMP/ch:$RUNNER_TEMP/ch" -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" --network ch-net -e BUILDKIT_HOST=tcp://buildkitd:8372 $CH_IMAGE ch -p github login -u "${{ github.actor }}" --password-stdin ghcr.io
+      - name: Wait for BuildKit
+        run: docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e CI=1 -e HOME="$RUNNER_TEMP/ch" -v "$RUNNER_TEMP/ch:$RUNNER_TEMP/ch" -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" --network ch-net -e BUILDKIT_HOST=tcp://buildkitd:8372 $CH_IMAGE ch -p github wait --buildkitd
+      - name: Build image
+        run: docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e CI=1 -e HOME="$RUNNER_TEMP/ch" -v "$RUNNER_TEMP/ch:$RUNNER_TEMP/ch" -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" --network ch-net -e BUILDKIT_HOST=tcp://buildkitd:8372 $CH_IMAGE ch -p github build base-deployment --platform arm64 --build-id "$SNAPSHOT_ID"
+      - name: Generate SBOM
+        run: docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e CI=1 -e HOME="$RUNNER_TEMP/ch" -v "$RUNNER_TEMP/ch:$RUNNER_TEMP/ch" -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" --network ch-net -e BUILDKIT_HOST=tcp://buildkitd:8372 $CH_IMAGE ch -p github sbom base-deployment --platform arm64 --build-id "$SNAPSHOT_ID"
+      - name: Upload SBOM
+        uses: actions/upload-artifact@v7
         with:
           name: base-deployment-arm64-sbom
           path: github/dist/*/*/*/cyclonedx.json
@@ -200,36 +269,50 @@ jobs:
       - build-base-deployment-amd64
       - build-base-deployment-arm64
     steps:
-      - uses: actions/checkout@v6
+      - name: Checkout code
+        uses: actions/checkout@v6
         with:
           lfs: true
-      - uses: actions/download-artifact@v7
+      - name: Download generated files
+        uses: actions/download-artifact@v7
         with:
           name: generated
           path: github/dist/
-      - run: mkdir -p "$RUNNER_TEMP/ch"
-      - run: echo "${{ secrets.GITHUB_TOKEN }}" | docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e CI=1 -i -e HOME="$RUNNER_TEMP/ch" -v "$RUNNER_TEMP/ch:$RUNNER_TEMP/ch" -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" $CH_IMAGE ch -p github login -u "${{ github.actor }}" --password-stdin ghcr.io
-      - run: docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e CI=1 -e HOME="$RUNNER_TEMP/ch" -v "$RUNNER_TEMP/ch:$RUNNER_TEMP/ch" -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" $CH_IMAGE ch -p github finalize base-deployment --build-id "$SNAPSHOT_ID"
+      - name: Prepare temp directory
+        run: mkdir -p "$RUNNER_TEMP/ch"
+      - name: Login to GHCR
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e CI=1 -i -e HOME="$RUNNER_TEMP/ch" -v "$RUNNER_TEMP/ch:$RUNNER_TEMP/ch" -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" $CH_IMAGE ch -p github login -u "${{ github.actor }}" --password-stdin ghcr.io
+      - name: Finalize manifest
+        run: docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e CI=1 -e HOME="$RUNNER_TEMP/ch" -v "$RUNNER_TEMP/ch:$RUNNER_TEMP/ch" -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" $CH_IMAGE ch -p github finalize base-deployment --build-id "$SNAPSHOT_ID"
 
   test-base-deployment:
     runs-on: ubuntu-latest
     needs:
       - manifest-base-deployment
     steps:
-      - uses: actions/checkout@v6
+      - name: Checkout code
+        uses: actions/checkout@v6
         with:
           lfs: true
-      - uses: actions/download-artifact@v7
+      - name: Download generated files
+        uses: actions/download-artifact@v7
         with:
           name: generated
           path: github/dist/
-      - run: mkdir -p "$RUNNER_TEMP/ch"
-      - run: docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
-      - run: docker network create ch-net
-      - run: docker run -d --name dind --privileged --network ch-net -e DOCKER_TLS_CERTDIR="" docker:dind
-      - run: echo "${{ secrets.GITHUB_TOKEN }}" | docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e CI=1 -i -e HOME="$RUNNER_TEMP/ch" -v "$RUNNER_TEMP/ch:$RUNNER_TEMP/ch" -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" --network ch-net -e DOCKER_HOST=tcp://dind:2375 $CH_IMAGE ch -p github login -u "${{ github.actor }}" --password-stdin ghcr.io
-      - run: docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e CI=1 -e HOME="$RUNNER_TEMP/ch" -v "$RUNNER_TEMP/ch:$RUNNER_TEMP/ch" -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" --network ch-net -e DOCKER_HOST=tcp://dind:2375 $CH_IMAGE ch -p github wait --docker-socket
-      - run: docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e CI=1 -e HOME="$RUNNER_TEMP/ch" -v "$RUNNER_TEMP/ch:$RUNNER_TEMP/ch" -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" --network ch-net -e DOCKER_HOST=tcp://dind:2375 $CH_IMAGE ch -p github test base-deployment --build-id "$SNAPSHOT_ID"
+      - name: Prepare temp directory
+        run: mkdir -p "$RUNNER_TEMP/ch"
+      - name: Setup QEMU
+        run: docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
+      - name: Create Docker network
+        run: docker network create ch-net
+      - name: Start Docker-in-Docker
+        run: docker run -d --name dind --privileged --network ch-net -e DOCKER_TLS_CERTDIR="" docker:dind
+      - name: Login to GHCR
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e CI=1 -i -e HOME="$RUNNER_TEMP/ch" -v "$RUNNER_TEMP/ch:$RUNNER_TEMP/ch" -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" --network ch-net -e DOCKER_HOST=tcp://dind:2375 $CH_IMAGE ch -p github login -u "${{ github.actor }}" --password-stdin ghcr.io
+      - name: Wait for Docker socket
+        run: docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e CI=1 -e HOME="$RUNNER_TEMP/ch" -v "$RUNNER_TEMP/ch:$RUNNER_TEMP/ch" -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" --network ch-net -e DOCKER_HOST=tcp://dind:2375 $CH_IMAGE ch -p github wait --docker-socket
+      - name: Run container tests
+        run: docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e CI=1 -e HOME="$RUNNER_TEMP/ch" -v "$RUNNER_TEMP/ch:$RUNNER_TEMP/ch" -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" --network ch-net -e DOCKER_HOST=tcp://dind:2375 $CH_IMAGE ch -p github test base-deployment --build-id "$SNAPSHOT_ID"
       - name: Publish Test Report
         id: test-report
         uses: mikepenz/action-junit-report@v6
@@ -250,21 +333,33 @@ jobs:
       - generate
       - manifest-base-deployment
     steps:
-      - uses: actions/checkout@v6
+      - name: Checkout code
+        uses: actions/checkout@v6
         with:
           lfs: true
-      - uses: actions/download-artifact@v7
+      - name: Download generated files
+        uses: actions/download-artifact@v7
         with:
           name: generated
           path: github/dist/
-      - run: mkdir -p "$RUNNER_TEMP/ch"
-      - run: docker network create ch-net
-      - run: docker run -d --name buildkitd --privileged --network ch-net moby/buildkit:v0.28.1 --addr tcp://0.0.0.0:8372
-      - run: echo "${{ secrets.GITHUB_TOKEN }}" | docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e CI=1 -i -e HOME="$RUNNER_TEMP/ch" -v "$RUNNER_TEMP/ch:$RUNNER_TEMP/ch" -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" --network ch-net -e BUILDKIT_HOST=tcp://buildkitd:8372 $CH_IMAGE ch -p github login -u "${{ github.actor }}" --password-stdin ghcr.io
-      - run: docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e CI=1 -e HOME="$RUNNER_TEMP/ch" -v "$RUNNER_TEMP/ch:$RUNNER_TEMP/ch" -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" --network ch-net -e BUILDKIT_HOST=tcp://buildkitd:8372 $CH_IMAGE ch -p github wait --buildkitd
-      - run: docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e CI=1 -e HOME="$RUNNER_TEMP/ch" -v "$RUNNER_TEMP/ch:$RUNNER_TEMP/ch" -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" --network ch-net -e BUILDKIT_HOST=tcp://buildkitd:8372 $CH_IMAGE ch -p github build dotnet-runtime --platform amd64 --build-id "$SNAPSHOT_ID"
-      - run: docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e CI=1 -e HOME="$RUNNER_TEMP/ch" -v "$RUNNER_TEMP/ch:$RUNNER_TEMP/ch" -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" --network ch-net -e BUILDKIT_HOST=tcp://buildkitd:8372 $CH_IMAGE ch -p github sbom dotnet-runtime --platform amd64 --build-id "$SNAPSHOT_ID"
-      - uses: actions/upload-artifact@v7
+      - name: Prepare temp directory
+        run: mkdir -p "$RUNNER_TEMP/ch"
+      - name: Create Docker network
+        run: docker network create ch-net
+      - name: Start BuildKit daemon
+        run: docker run -d --name buildkitd --privileged --network ch-net moby/buildkit:v0.28.1 --addr tcp://0.0.0.0:8372
+      - name: Login to registry
+        run: echo "${{ secrets.CONTAINER_HIVE_REGISTRY_PASSWORD }}" | docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e CI=1 -i -e HOME="$RUNNER_TEMP/ch" -v "$RUNNER_TEMP/ch:$RUNNER_TEMP/ch" -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" --network ch-net -e BUILDKIT_HOST=tcp://buildkitd:8372 $CH_IMAGE ch -p github login -u "${{ secrets.CONTAINER_HIVE_REGISTRY_USERNAME }}" --password-stdin "ghcr.io"
+      - name: Login to GHCR
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e CI=1 -i -e HOME="$RUNNER_TEMP/ch" -v "$RUNNER_TEMP/ch:$RUNNER_TEMP/ch" -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" --network ch-net -e BUILDKIT_HOST=tcp://buildkitd:8372 $CH_IMAGE ch -p github login -u "${{ github.actor }}" --password-stdin ghcr.io
+      - name: Wait for BuildKit
+        run: docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e CI=1 -e HOME="$RUNNER_TEMP/ch" -v "$RUNNER_TEMP/ch:$RUNNER_TEMP/ch" -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" --network ch-net -e BUILDKIT_HOST=tcp://buildkitd:8372 $CH_IMAGE ch -p github wait --buildkitd
+      - name: Build image
+        run: docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e CI=1 -e HOME="$RUNNER_TEMP/ch" -v "$RUNNER_TEMP/ch:$RUNNER_TEMP/ch" -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" --network ch-net -e BUILDKIT_HOST=tcp://buildkitd:8372 $CH_IMAGE ch -p github build dotnet-runtime --platform amd64 --build-id "$SNAPSHOT_ID"
+      - name: Generate SBOM
+        run: docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e CI=1 -e HOME="$RUNNER_TEMP/ch" -v "$RUNNER_TEMP/ch:$RUNNER_TEMP/ch" -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" --network ch-net -e BUILDKIT_HOST=tcp://buildkitd:8372 $CH_IMAGE ch -p github sbom dotnet-runtime --platform amd64 --build-id "$SNAPSHOT_ID"
+      - name: Upload SBOM
+        uses: actions/upload-artifact@v7
         with:
           name: dotnet-runtime-amd64-sbom
           path: github/dist/*/*/*/cyclonedx.json
@@ -276,36 +371,50 @@ jobs:
     needs:
       - build-dotnet-runtime-amd64
     steps:
-      - uses: actions/checkout@v6
+      - name: Checkout code
+        uses: actions/checkout@v6
         with:
           lfs: true
-      - uses: actions/download-artifact@v7
+      - name: Download generated files
+        uses: actions/download-artifact@v7
         with:
           name: generated
           path: github/dist/
-      - run: mkdir -p "$RUNNER_TEMP/ch"
-      - run: echo "${{ secrets.GITHUB_TOKEN }}" | docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e CI=1 -i -e HOME="$RUNNER_TEMP/ch" -v "$RUNNER_TEMP/ch:$RUNNER_TEMP/ch" -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" $CH_IMAGE ch -p github login -u "${{ github.actor }}" --password-stdin ghcr.io
-      - run: docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e CI=1 -e HOME="$RUNNER_TEMP/ch" -v "$RUNNER_TEMP/ch:$RUNNER_TEMP/ch" -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" $CH_IMAGE ch -p github finalize dotnet-runtime --build-id "$SNAPSHOT_ID"
+      - name: Prepare temp directory
+        run: mkdir -p "$RUNNER_TEMP/ch"
+      - name: Login to GHCR
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e CI=1 -i -e HOME="$RUNNER_TEMP/ch" -v "$RUNNER_TEMP/ch:$RUNNER_TEMP/ch" -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" $CH_IMAGE ch -p github login -u "${{ github.actor }}" --password-stdin ghcr.io
+      - name: Finalize manifest
+        run: docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e CI=1 -e HOME="$RUNNER_TEMP/ch" -v "$RUNNER_TEMP/ch:$RUNNER_TEMP/ch" -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" $CH_IMAGE ch -p github finalize dotnet-runtime --build-id "$SNAPSHOT_ID"
 
   test-dotnet-runtime:
     runs-on: ubuntu-latest
     needs:
       - manifest-dotnet-runtime
     steps:
-      - uses: actions/checkout@v6
+      - name: Checkout code
+        uses: actions/checkout@v6
         with:
           lfs: true
-      - uses: actions/download-artifact@v7
+      - name: Download generated files
+        uses: actions/download-artifact@v7
         with:
           name: generated
           path: github/dist/
-      - run: mkdir -p "$RUNNER_TEMP/ch"
-      - run: docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
-      - run: docker network create ch-net
-      - run: docker run -d --name dind --privileged --network ch-net -e DOCKER_TLS_CERTDIR="" docker:dind
-      - run: echo "${{ secrets.GITHUB_TOKEN }}" | docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e CI=1 -i -e HOME="$RUNNER_TEMP/ch" -v "$RUNNER_TEMP/ch:$RUNNER_TEMP/ch" -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" --network ch-net -e DOCKER_HOST=tcp://dind:2375 $CH_IMAGE ch -p github login -u "${{ github.actor }}" --password-stdin ghcr.io
-      - run: docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e CI=1 -e HOME="$RUNNER_TEMP/ch" -v "$RUNNER_TEMP/ch:$RUNNER_TEMP/ch" -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" --network ch-net -e DOCKER_HOST=tcp://dind:2375 $CH_IMAGE ch -p github wait --docker-socket
-      - run: docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e CI=1 -e HOME="$RUNNER_TEMP/ch" -v "$RUNNER_TEMP/ch:$RUNNER_TEMP/ch" -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" --network ch-net -e DOCKER_HOST=tcp://dind:2375 $CH_IMAGE ch -p github test dotnet-runtime --build-id "$SNAPSHOT_ID"
+      - name: Prepare temp directory
+        run: mkdir -p "$RUNNER_TEMP/ch"
+      - name: Setup QEMU
+        run: docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
+      - name: Create Docker network
+        run: docker network create ch-net
+      - name: Start Docker-in-Docker
+        run: docker run -d --name dind --privileged --network ch-net -e DOCKER_TLS_CERTDIR="" docker:dind
+      - name: Login to GHCR
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e CI=1 -i -e HOME="$RUNNER_TEMP/ch" -v "$RUNNER_TEMP/ch:$RUNNER_TEMP/ch" -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" --network ch-net -e DOCKER_HOST=tcp://dind:2375 $CH_IMAGE ch -p github login -u "${{ github.actor }}" --password-stdin ghcr.io
+      - name: Wait for Docker socket
+        run: docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e CI=1 -e HOME="$RUNNER_TEMP/ch" -v "$RUNNER_TEMP/ch:$RUNNER_TEMP/ch" -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" --network ch-net -e DOCKER_HOST=tcp://dind:2375 $CH_IMAGE ch -p github wait --docker-socket
+      - name: Run container tests
+        run: docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e CI=1 -e HOME="$RUNNER_TEMP/ch" -v "$RUNNER_TEMP/ch:$RUNNER_TEMP/ch" -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" --network ch-net -e DOCKER_HOST=tcp://dind:2375 $CH_IMAGE ch -p github test dotnet-runtime --build-id "$SNAPSHOT_ID"
       - name: Publish Test Report
         id: test-report
         uses: mikepenz/action-junit-report@v6
@@ -326,21 +435,33 @@ jobs:
       - generate
       - manifest-base-ci
     steps:
-      - uses: actions/checkout@v6
+      - name: Checkout code
+        uses: actions/checkout@v6
         with:
           lfs: true
-      - uses: actions/download-artifact@v7
+      - name: Download generated files
+        uses: actions/download-artifact@v7
         with:
           name: generated
           path: github/dist/
-      - run: mkdir -p "$RUNNER_TEMP/ch"
-      - run: docker network create ch-net
-      - run: docker run -d --name buildkitd --privileged --network ch-net moby/buildkit:v0.28.1 --addr tcp://0.0.0.0:8372
-      - run: echo "${{ secrets.GITHUB_TOKEN }}" | docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e CI=1 -i -e HOME="$RUNNER_TEMP/ch" -v "$RUNNER_TEMP/ch:$RUNNER_TEMP/ch" -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" --network ch-net -e BUILDKIT_HOST=tcp://buildkitd:8372 $CH_IMAGE ch -p github login -u "${{ github.actor }}" --password-stdin ghcr.io
-      - run: docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e CI=1 -e HOME="$RUNNER_TEMP/ch" -v "$RUNNER_TEMP/ch:$RUNNER_TEMP/ch" -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" --network ch-net -e BUILDKIT_HOST=tcp://buildkitd:8372 $CH_IMAGE ch -p github wait --buildkitd
-      - run: docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e CI=1 -e HOME="$RUNNER_TEMP/ch" -v "$RUNNER_TEMP/ch:$RUNNER_TEMP/ch" -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" --network ch-net -e BUILDKIT_HOST=tcp://buildkitd:8372 $CH_IMAGE ch -p github build go-ci --platform amd64 --build-id "$SNAPSHOT_ID"
-      - run: docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e CI=1 -e HOME="$RUNNER_TEMP/ch" -v "$RUNNER_TEMP/ch:$RUNNER_TEMP/ch" -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" --network ch-net -e BUILDKIT_HOST=tcp://buildkitd:8372 $CH_IMAGE ch -p github sbom go-ci --platform amd64 --build-id "$SNAPSHOT_ID"
-      - uses: actions/upload-artifact@v7
+      - name: Prepare temp directory
+        run: mkdir -p "$RUNNER_TEMP/ch"
+      - name: Create Docker network
+        run: docker network create ch-net
+      - name: Start BuildKit daemon
+        run: docker run -d --name buildkitd --privileged --network ch-net moby/buildkit:v0.28.1 --addr tcp://0.0.0.0:8372
+      - name: Login to registry
+        run: echo "${{ secrets.CONTAINER_HIVE_REGISTRY_PASSWORD }}" | docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e CI=1 -i -e HOME="$RUNNER_TEMP/ch" -v "$RUNNER_TEMP/ch:$RUNNER_TEMP/ch" -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" --network ch-net -e BUILDKIT_HOST=tcp://buildkitd:8372 $CH_IMAGE ch -p github login -u "${{ secrets.CONTAINER_HIVE_REGISTRY_USERNAME }}" --password-stdin "ghcr.io"
+      - name: Login to GHCR
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e CI=1 -i -e HOME="$RUNNER_TEMP/ch" -v "$RUNNER_TEMP/ch:$RUNNER_TEMP/ch" -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" --network ch-net -e BUILDKIT_HOST=tcp://buildkitd:8372 $CH_IMAGE ch -p github login -u "${{ github.actor }}" --password-stdin ghcr.io
+      - name: Wait for BuildKit
+        run: docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e CI=1 -e HOME="$RUNNER_TEMP/ch" -v "$RUNNER_TEMP/ch:$RUNNER_TEMP/ch" -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" --network ch-net -e BUILDKIT_HOST=tcp://buildkitd:8372 $CH_IMAGE ch -p github wait --buildkitd
+      - name: Build image
+        run: docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e CI=1 -e HOME="$RUNNER_TEMP/ch" -v "$RUNNER_TEMP/ch:$RUNNER_TEMP/ch" -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" --network ch-net -e BUILDKIT_HOST=tcp://buildkitd:8372 $CH_IMAGE ch -p github build go-ci --platform amd64 --build-id "$SNAPSHOT_ID"
+      - name: Generate SBOM
+        run: docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e CI=1 -e HOME="$RUNNER_TEMP/ch" -v "$RUNNER_TEMP/ch:$RUNNER_TEMP/ch" -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" --network ch-net -e BUILDKIT_HOST=tcp://buildkitd:8372 $CH_IMAGE ch -p github sbom go-ci --platform amd64 --build-id "$SNAPSHOT_ID"
+      - name: Upload SBOM
+        uses: actions/upload-artifact@v7
         with:
           name: go-ci-amd64-sbom
           path: github/dist/*/*/*/cyclonedx.json
@@ -352,36 +473,50 @@ jobs:
     needs:
       - build-go-ci-amd64
     steps:
-      - uses: actions/checkout@v6
+      - name: Checkout code
+        uses: actions/checkout@v6
         with:
           lfs: true
-      - uses: actions/download-artifact@v7
+      - name: Download generated files
+        uses: actions/download-artifact@v7
         with:
           name: generated
           path: github/dist/
-      - run: mkdir -p "$RUNNER_TEMP/ch"
-      - run: echo "${{ secrets.GITHUB_TOKEN }}" | docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e CI=1 -i -e HOME="$RUNNER_TEMP/ch" -v "$RUNNER_TEMP/ch:$RUNNER_TEMP/ch" -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" $CH_IMAGE ch -p github login -u "${{ github.actor }}" --password-stdin ghcr.io
-      - run: docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e CI=1 -e HOME="$RUNNER_TEMP/ch" -v "$RUNNER_TEMP/ch:$RUNNER_TEMP/ch" -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" $CH_IMAGE ch -p github finalize go-ci --build-id "$SNAPSHOT_ID"
+      - name: Prepare temp directory
+        run: mkdir -p "$RUNNER_TEMP/ch"
+      - name: Login to GHCR
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e CI=1 -i -e HOME="$RUNNER_TEMP/ch" -v "$RUNNER_TEMP/ch:$RUNNER_TEMP/ch" -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" $CH_IMAGE ch -p github login -u "${{ github.actor }}" --password-stdin ghcr.io
+      - name: Finalize manifest
+        run: docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e CI=1 -e HOME="$RUNNER_TEMP/ch" -v "$RUNNER_TEMP/ch:$RUNNER_TEMP/ch" -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" $CH_IMAGE ch -p github finalize go-ci --build-id "$SNAPSHOT_ID"
 
   test-go-ci:
     runs-on: ubuntu-latest
     needs:
       - manifest-go-ci
     steps:
-      - uses: actions/checkout@v6
+      - name: Checkout code
+        uses: actions/checkout@v6
         with:
           lfs: true
-      - uses: actions/download-artifact@v7
+      - name: Download generated files
+        uses: actions/download-artifact@v7
         with:
           name: generated
           path: github/dist/
-      - run: mkdir -p "$RUNNER_TEMP/ch"
-      - run: docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
-      - run: docker network create ch-net
-      - run: docker run -d --name dind --privileged --network ch-net -e DOCKER_TLS_CERTDIR="" docker:dind
-      - run: echo "${{ secrets.GITHUB_TOKEN }}" | docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e CI=1 -i -e HOME="$RUNNER_TEMP/ch" -v "$RUNNER_TEMP/ch:$RUNNER_TEMP/ch" -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" --network ch-net -e DOCKER_HOST=tcp://dind:2375 $CH_IMAGE ch -p github login -u "${{ github.actor }}" --password-stdin ghcr.io
-      - run: docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e CI=1 -e HOME="$RUNNER_TEMP/ch" -v "$RUNNER_TEMP/ch:$RUNNER_TEMP/ch" -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" --network ch-net -e DOCKER_HOST=tcp://dind:2375 $CH_IMAGE ch -p github wait --docker-socket
-      - run: docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e CI=1 -e HOME="$RUNNER_TEMP/ch" -v "$RUNNER_TEMP/ch:$RUNNER_TEMP/ch" -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" --network ch-net -e DOCKER_HOST=tcp://dind:2375 $CH_IMAGE ch -p github test go-ci --build-id "$SNAPSHOT_ID"
+      - name: Prepare temp directory
+        run: mkdir -p "$RUNNER_TEMP/ch"
+      - name: Setup QEMU
+        run: docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
+      - name: Create Docker network
+        run: docker network create ch-net
+      - name: Start Docker-in-Docker
+        run: docker run -d --name dind --privileged --network ch-net -e DOCKER_TLS_CERTDIR="" docker:dind
+      - name: Login to GHCR
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e CI=1 -i -e HOME="$RUNNER_TEMP/ch" -v "$RUNNER_TEMP/ch:$RUNNER_TEMP/ch" -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" --network ch-net -e DOCKER_HOST=tcp://dind:2375 $CH_IMAGE ch -p github login -u "${{ github.actor }}" --password-stdin ghcr.io
+      - name: Wait for Docker socket
+        run: docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e CI=1 -e HOME="$RUNNER_TEMP/ch" -v "$RUNNER_TEMP/ch:$RUNNER_TEMP/ch" -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" --network ch-net -e DOCKER_HOST=tcp://dind:2375 $CH_IMAGE ch -p github wait --docker-socket
+      - name: Run container tests
+        run: docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e CI=1 -e HOME="$RUNNER_TEMP/ch" -v "$RUNNER_TEMP/ch:$RUNNER_TEMP/ch" -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" --network ch-net -e DOCKER_HOST=tcp://dind:2375 $CH_IMAGE ch -p github test go-ci --build-id "$SNAPSHOT_ID"
       - name: Publish Test Report
         id: test-report
         uses: mikepenz/action-junit-report@v6
