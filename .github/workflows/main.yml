@@ -21,7 +21,7 @@ permissions:
 
 env:
   SNAPSHOT_ID: "${{ github.event.pull_request.number }}"
-  CH_IMAGE: ghcr.io/timo-reymann/containerhive:1318dab
+  CH_IMAGE: ghcr.io/timo-reymann/containerhive:4d88967
 
 jobs:
   # === GENERATE ===
@@ -141,6 +141,8 @@ jobs:
           path: github/dist/
       - name: Prepare temp directory
         run: mkdir -p "$RUNNER_TEMP/ch"
+      - name: Login to registry
+        run: echo "${{ secrets.CONTAINER_HIVE_REGISTRY_PASSWORD }}" | docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e CI=1 -i -e HOME="$RUNNER_TEMP/ch" -v "$RUNNER_TEMP/ch:$RUNNER_TEMP/ch" -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" $CH_IMAGE ch -p github login -u "${{ secrets.CONTAINER_HIVE_REGISTRY_USERNAME }}" --password-stdin "ghcr.io"
       - name: Login to GHCR
         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e CI=1 -i -e HOME="$RUNNER_TEMP/ch" -v "$RUNNER_TEMP/ch:$RUNNER_TEMP/ch" -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" $CH_IMAGE ch -p github login -u "${{ github.actor }}" --password-stdin ghcr.io
       - name: Finalize manifest
@@ -168,6 +170,8 @@ jobs:
         run: docker network create ch-net
       - name: Start Docker-in-Docker
         run: docker run -d --name dind --privileged --network ch-net -e DOCKER_TLS_CERTDIR="" docker:dind
+      - name: Login to registry
+        run: echo "${{ secrets.CONTAINER_HIVE_REGISTRY_PASSWORD }}" | docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e CI=1 -i -e HOME="$RUNNER_TEMP/ch" -v "$RUNNER_TEMP/ch:$RUNNER_TEMP/ch" -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" --network ch-net -e DOCKER_HOST=tcp://dind:2375 $CH_IMAGE ch -p github login -u "${{ secrets.CONTAINER_HIVE_REGISTRY_USERNAME }}" --password-stdin "ghcr.io"
       - name: Login to GHCR
         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e CI=1 -i -e HOME="$RUNNER_TEMP/ch" -v "$RUNNER_TEMP/ch:$RUNNER_TEMP/ch" -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" --network ch-net -e DOCKER_HOST=tcp://dind:2375 $CH_IMAGE ch -p github login -u "${{ github.actor }}" --password-stdin ghcr.io
       - name: Wait for Docker socket
@@ -280,6 +284,8 @@ jobs:
           path: github/dist/
       - name: Prepare temp directory
         run: mkdir -p "$RUNNER_TEMP/ch"
+      - name: Login to registry
+        run: echo "${{ secrets.CONTAINER_HIVE_REGISTRY_PASSWORD }}" | docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e CI=1 -i -e HOME="$RUNNER_TEMP/ch" -v "$RUNNER_TEMP/ch:$RUNNER_TEMP/ch" -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" $CH_IMAGE ch -p github login -u "${{ secrets.CONTAINER_HIVE_REGISTRY_USERNAME }}" --password-stdin "ghcr.io"
       - name: Login to GHCR
         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e CI=1 -i -e HOME="$RUNNER_TEMP/ch" -v "$RUNNER_TEMP/ch:$RUNNER_TEMP/ch" -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" $CH_IMAGE ch -p github login -u "${{ github.actor }}" --password-stdin ghcr.io
       - name: Finalize manifest
@@ -307,6 +313,8 @@ jobs:
         run: docker network create ch-net
       - name: Start Docker-in-Docker
         run: docker run -d --name dind --privileged --network ch-net -e DOCKER_TLS_CERTDIR="" docker:dind
+      - name: Login to registry
+        run: echo "${{ secrets.CONTAINER_HIVE_REGISTRY_PASSWORD }}" | docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e CI=1 -i -e HOME="$RUNNER_TEMP/ch" -v "$RUNNER_TEMP/ch:$RUNNER_TEMP/ch" -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" --network ch-net -e DOCKER_HOST=tcp://dind:2375 $CH_IMAGE ch -p github login -u "${{ secrets.CONTAINER_HIVE_REGISTRY_USERNAME }}" --password-stdin "ghcr.io"
       - name: Login to GHCR
         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e CI=1 -i -e HOME="$RUNNER_TEMP/ch" -v "$RUNNER_TEMP/ch:$RUNNER_TEMP/ch" -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" --network ch-net -e DOCKER_HOST=tcp://dind:2375 $CH_IMAGE ch -p github login -u "${{ github.actor }}" --password-stdin ghcr.io
       - name: Wait for Docker socket
@@ -382,6 +390,8 @@ jobs:
           path: github/dist/
       - name: Prepare temp directory
         run: mkdir -p "$RUNNER_TEMP/ch"
+      - name: Login to registry
+        run: echo "${{ secrets.CONTAINER_HIVE_REGISTRY_PASSWORD }}" | docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e CI=1 -i -e HOME="$RUNNER_TEMP/ch" -v "$RUNNER_TEMP/ch:$RUNNER_TEMP/ch" -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" $CH_IMAGE ch -p github login -u "${{ secrets.CONTAINER_HIVE_REGISTRY_USERNAME }}" --password-stdin "ghcr.io"
       - name: Login to GHCR
         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e CI=1 -i -e HOME="$RUNNER_TEMP/ch" -v "$RUNNER_TEMP/ch:$RUNNER_TEMP/ch" -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" $CH_IMAGE ch -p github login -u "${{ github.actor }}" --password-stdin ghcr.io
       - name: Finalize manifest
@@ -409,6 +419,8 @@ jobs:
         run: docker network create ch-net
       - name: Start Docker-in-Docker
         run: docker run -d --name dind --privileged --network ch-net -e DOCKER_TLS_CERTDIR="" docker:dind
+      - name: Login to registry
+        run: echo "${{ secrets.CONTAINER_HIVE_REGISTRY_PASSWORD }}" | docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e CI=1 -i -e HOME="$RUNNER_TEMP/ch" -v "$RUNNER_TEMP/ch:$RUNNER_TEMP/ch" -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" --network ch-net -e DOCKER_HOST=tcp://dind:2375 $CH_IMAGE ch -p github login -u "${{ secrets.CONTAINER_HIVE_REGISTRY_USERNAME }}" --password-stdin "ghcr.io"
       - name: Login to GHCR
         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e CI=1 -i -e HOME="$RUNNER_TEMP/ch" -v "$RUNNER_TEMP/ch:$RUNNER_TEMP/ch" -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" --network ch-net -e DOCKER_HOST=tcp://dind:2375 $CH_IMAGE ch -p github login -u "${{ github.actor }}" --password-stdin ghcr.io
       - name: Wait for Docker socket
@@ -484,6 +496,8 @@ jobs:
           path: github/dist/
       - name: Prepare temp directory
         run: mkdir -p "$RUNNER_TEMP/ch"
+      - name: Login to registry
+        run: echo "${{ secrets.CONTAINER_HIVE_REGISTRY_PASSWORD }}" | docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e CI=1 -i -e HOME="$RUNNER_TEMP/ch" -v "$RUNNER_TEMP/ch:$RUNNER_TEMP/ch" -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" $CH_IMAGE ch -p github login -u "${{ secrets.CONTAINER_HIVE_REGISTRY_USERNAME }}" --password-stdin "ghcr.io"
       - name: Login to GHCR
         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e CI=1 -i -e HOME="$RUNNER_TEMP/ch" -v "$RUNNER_TEMP/ch:$RUNNER_TEMP/ch" -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" $CH_IMAGE ch -p github login -u "${{ github.actor }}" --password-stdin ghcr.io
       - name: Finalize manifest
@@ -511,6 +525,8 @@ jobs:
         run: docker network create ch-net
       - name: Start Docker-in-Docker
         run: docker run -d --name dind --privileged --network ch-net -e DOCKER_TLS_CERTDIR="" docker:dind
+      - name: Login to registry
+        run: echo "${{ secrets.CONTAINER_HIVE_REGISTRY_PASSWORD }}" | docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e CI=1 -i -e HOME="$RUNNER_TEMP/ch" -v "$RUNNER_TEMP/ch:$RUNNER_TEMP/ch" -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" --network ch-net -e DOCKER_HOST=tcp://dind:2375 $CH_IMAGE ch -p github login -u "${{ secrets.CONTAINER_HIVE_REGISTRY_USERNAME }}" --password-stdin "ghcr.io"
       - name: Login to GHCR
         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e CI=1 -i -e HOME="$RUNNER_TEMP/ch" -v "$RUNNER_TEMP/ch:$RUNNER_TEMP/ch" -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" --network ch-net -e DOCKER_HOST=tcp://dind:2375 $CH_IMAGE ch -p github login -u "${{ github.actor }}" --password-stdin ghcr.io
       - name: Wait for Docker socket
@@ -545,6 +561,36 @@ jobs:
       - uses: actions/download-artifact@v7
         with:
           name: generated
+          path: github/dist/
+      - name: Download base-ci-amd64 SBOM
+        uses: actions/download-artifact@v7
+        with:
+          name: base-ci-amd64-sbom
+          path: github/dist/
+      - name: Download base-ci-arm64 SBOM
+        uses: actions/download-artifact@v7
+        with:
+          name: base-ci-arm64-sbom
+          path: github/dist/
+      - name: Download base-deployment-amd64 SBOM
+        uses: actions/download-artifact@v7
+        with:
+          name: base-deployment-amd64-sbom
+          path: github/dist/
+      - name: Download base-deployment-arm64 SBOM
+        uses: actions/download-artifact@v7
+        with:
+          name: base-deployment-arm64-sbom
+          path: github/dist/
+      - name: Download dotnet-runtime-amd64 SBOM
+        uses: actions/download-artifact@v7
+        with:
+          name: dotnet-runtime-amd64-sbom
+          path: github/dist/
+      - name: Download go-ci-amd64 SBOM
+        uses: actions/download-artifact@v7
+        with:
+          name: go-ci-amd64-sbom
           path: github/dist/
       - run: mkdir -p "$RUNNER_TEMP/ch"
       - run: echo "${{ secrets.GITHUB_TOKEN }}" | docker run --rm --entrypoint="" -u "$(id -u):$(id -g)" -e CI=1 -i -e HOME="$RUNNER_TEMP/ch" -v "$RUNNER_TEMP/ch:$RUNNER_TEMP/ch" -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "$GITHUB_WORKSPACE" $CH_IMAGE ch -p github report
