@@ -1,0 +1,21 @@
+# Go CI Node Variant
+
+This variant extends the base Go CI image with Node.js support for polyglot projects.
+
+## Included Tools
+
+- Go compiler
+- Node.js {{ .Versions.nodejs }}
+- Zig build tool
+
+## Usage
+
+```dockerfile
+FROM __hive__/go-ci:1.26.0-node
+
+# Build Go application
+RUN go build -o myapp .
+
+# Install Node dependencies
+RUN npm install
+```
