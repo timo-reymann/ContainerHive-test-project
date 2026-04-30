@@ -1,2 +1,2 @@
 registry:
-  address: 'registry.gitlab.com/timo-reymann/mirror-containerhive-test-project'
+  address: 'registry.gitlab.com/containerhive/test-project'
