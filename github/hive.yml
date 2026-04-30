@@ -1,2 +1,2 @@
 registry:
-  address: 'ghcr.io/timo-reymann/containerhive-test-project'
+  address: 'ghcr.io/ContainerHive/test-project'
