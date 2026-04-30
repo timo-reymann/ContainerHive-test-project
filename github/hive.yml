@@ -1,6 +1,6 @@
 registry:
-  address: 'ghcr.io/ContainerHive/test-project'
+  address: 'ghcr.io/containerhive/test-project'
 
 cache:
   type: registry
-  ref: ghcr.io/ContainerHive/test-project/cache
+  ref: ghcr.io/containerhive/test-project/cache
