@@ -3,6 +3,7 @@ name: Mirror to GitLab
 on:
   push:
     branches: ["**"]
+  delete:
 
 jobs:
   mirror:
@@ -11,13 +12,10 @@ jobs:
       - name: Checkout repository (full history)
         uses: actions/checkout@v6
         with:
-          fetch-depth: 0  # Fetch all history for all branches and tags
+          fetch-depth: 0
 
       - name: Mirror to GitLab
-        run: |
-          git remote add gitlab https://pat:${{ secrets.GITLAB_TOKEN }}@gitlab.com/containerhive/test-project.git
-          git push gitlab \
-            --prune \
-            "refs/remotes/origin/*:refs/heads/*" \
-        env:
-          GITLAB_TOKEN: ${{ secrets.GITLAB_TOKEN }}
+        uses: pixta-dev/repository-mirroring-action@v1
+        with:
+          target_repo_url: git@gitlab.com:containerhive/test-project.git
+          ssh_private_key: ${{ secrets.GITLAB_SSH_PRIVATE_KEY }}
