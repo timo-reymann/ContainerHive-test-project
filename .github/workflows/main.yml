@@ -59,7 +59,7 @@ jobs:
         with:
           lfs: true
       - name: Download generated files
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v8
         with:
           name: generated
           path: github/dist/
@@ -96,7 +96,7 @@ jobs:
         with:
           lfs: true
       - name: Download generated files
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v8
         with:
           name: generated
           path: github/dist/
@@ -136,7 +136,7 @@ jobs:
         with:
           lfs: true
       - name: Download generated files
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v8
         with:
           name: generated
           path: github/dist/
@@ -160,7 +160,7 @@ jobs:
         with:
           lfs: true
       - name: Download generated files
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v8
         with:
           name: generated
           path: github/dist/
@@ -204,7 +204,7 @@ jobs:
         with:
           lfs: true
       - name: Download generated files
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v8
         with:
           name: generated
           path: github/dist/
@@ -241,7 +241,7 @@ jobs:
         with:
           lfs: true
       - name: Download generated files
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v8
         with:
           name: generated
           path: github/dist/
@@ -281,7 +281,7 @@ jobs:
         with:
           lfs: true
       - name: Download generated files
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v8
         with:
           name: generated
           path: github/dist/
@@ -305,7 +305,7 @@ jobs:
         with:
           lfs: true
       - name: Download generated files
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v8
         with:
           name: generated
           path: github/dist/
@@ -350,7 +350,7 @@ jobs:
         with:
           lfs: true
       - name: Download generated files
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v8
         with:
           name: generated
           path: github/dist/
@@ -389,7 +389,7 @@ jobs:
         with:
           lfs: true
       - name: Download generated files
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v8
         with:
           name: generated
           path: github/dist/
@@ -412,7 +412,7 @@ jobs:
         with:
           lfs: true
       - name: Download generated files
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v8
         with:
           name: generated
           path: github/dist/
@@ -457,7 +457,7 @@ jobs:
         with:
           lfs: true
       - name: Download generated files
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v8
         with:
           name: generated
           path: github/dist/
@@ -496,7 +496,7 @@ jobs:
         with:
           lfs: true
       - name: Download generated files
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v8
         with:
           name: generated
           path: github/dist/
@@ -519,7 +519,7 @@ jobs:
         with:
           lfs: true
       - name: Download generated files
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v8
         with:
           name: generated
           path: github/dist/
@@ -564,37 +564,37 @@ jobs:
       - uses: actions/checkout@v6
         with:
           lfs: true
-      - uses: actions/download-artifact@v7
+      - uses: actions/download-artifact@v8
         with:
           name: generated
           path: github/dist/
       - name: Download base-ci-amd64 SBOM
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v8
         with:
           name: base-ci-amd64-sbom
           path: github/dist/
       - name: Download base-ci-arm64 SBOM
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v8
         with:
           name: base-ci-arm64-sbom
           path: github/dist/
       - name: Download base-deployment-amd64 SBOM
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v8
         with:
           name: base-deployment-amd64-sbom
           path: github/dist/
       - name: Download base-deployment-arm64 SBOM
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v8
         with:
           name: base-deployment-arm64-sbom
           path: github/dist/
       - name: Download dotnet-runtime-amd64 SBOM
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v8
         with:
           name: dotnet-runtime-amd64-sbom
           path: github/dist/
       - name: Download go-ci-amd64 SBOM
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v8
         with:
           name: go-ci-amd64-sbom
           path: github/dist/
@@ -604,8 +604,8 @@ jobs:
       - run: mkdir -p public
       - run: cp github/dist/report.html public/index.html
       - run: cp github/dist/report.json public/report.json
-      - uses: actions/upload-pages-artifact@v3
+      - uses: actions/upload-pages-artifact@v5
         with:
           path: public/
-      - uses: actions/deploy-pages@v4
+      - uses: actions/deploy-pages@v5
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
