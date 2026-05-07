@@ -29,7 +29,7 @@ before_script:
 
 .build:
   image:
-    name: ghcr.io/containerhive/containerhive:cb64583
+    name: ghcr.io/containerhive/containerhive::b8f930d
     entrypoint: [""]
   services:
     - name: moby/buildkit:v0.28.1
@@ -50,14 +50,14 @@ before_script:
 
 .manifest:
   image:
-    name: ghcr.io/containerhive/containerhive:cb64583
+    name: ghcr.io/containerhive/containerhive::b8f930d
     entrypoint: [""]
   script:
     - ch -p gitlab finalize ${IMAGE_NAME} --build-id "$SNAPSHOT_ID"
 
 .test:
   image:
-    name: ghcr.io/containerhive/containerhive:cb64583
+    name: ghcr.io/containerhive/containerhive::b8f930d
     entrypoint: [""]
   services:
     - name: docker:dind
@@ -72,7 +72,7 @@ before_script:
 # === GENERATE ===
 generate:
   image:
-    name: ghcr.io/containerhive/containerhive:cb64583
+    name: ghcr.io/containerhive/containerhive::b8f930d
     entrypoint: [""]
   stage: generate
   script:
@@ -283,7 +283,7 @@ test-go-ci:
 
 report:
   image:
-    name: ghcr.io/containerhive/containerhive:cb64583
+    name: ghcr.io/containerhive/containerhive::b8f930d
     entrypoint: [""]
   stage: report
   needs:
