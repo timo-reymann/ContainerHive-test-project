@@ -283,7 +283,7 @@ test-go-ci:
 
 report:
   image:
-    name: ghcr.io/containerhive/containerhive::b8f930d
+    name: ghcr.io/containerhive/containerhive:b8f930d
     entrypoint: [""]
   stage: report
   needs:
