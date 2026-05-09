@@ -1,2 +1,6 @@
 registry:
   address: 'registry.gitlab.com/containerhive/test-project'
+
+cache:
+  type: registry
+  ref: registry.gitlab.com/containerhive/test-project/cache
